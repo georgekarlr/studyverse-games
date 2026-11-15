@@ -1,0 +1,35 @@
+{
+  "protocol": "studyverse-github-source-tree-v1",
+  "project_id": "7e9aa17e-7dab-4a40-ae6a-8c758b960d07",
+  "display_name": "car-park",
+  "fixed_item_type": "multiple_choice",
+  "entry_path": "index.html",
+  "entry_file_id": "7446599c-6d7a-4f78-b3e9-a8e41ff44620",
+  "created_at": "2026-11-15T08:10:24.253Z",
+  "updated_at": "2026-11-15T08:10:24.253Z",
+  "empty_directories": [],
+  "source_files": [
+    {
+      "id": "7446599c-6d7a-4f78-b3e9-a8e41ff44620",
+      "path": "index.html",
+      "language": "html",
+      "size_bytes": 218,
+      "sha256_hex": "23f9cc1f94ff8897d26321310b0c489caa152be18d6fb1f2c2749ef097dceaa2"
+    },
+    {
+      "id": "f1faa0a0-7063-4cb6-b287-74bc5f4025ab",
+      "path": "main.js",
+      "language": "javascript",
+      "size_bytes": 1726,
+      "sha256_hex": "1e1e2490ae1d5219e49902e72723faa9f2b18a62bc1c6630a3e98ea6a901e0d1"
+    },
+    {
+      "id": "9aa23c6e-ee21-4235-baa2-1d3489d61692",
+      "path": "styles.css",
+      "language": "css",
+      "size_bytes": 355,
+      "sha256_hex": "f0005e82e9b60aa5ade2826ac34098e1a9e70fef651a17274a5024004f0daddc"
+    }
+  ],
+  "media_assets": []
+}
