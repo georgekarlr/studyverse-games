@@ -1,0 +1,35 @@
+{
+  "protocol": "studyverse-github-source-tree-v1",
+  "project_id": "4c84c21e-b797-4754-8d49-5134538dd468",
+  "display_name": "car-parking",
+  "fixed_item_type": "multiple_choice",
+  "entry_path": "index.html",
+  "entry_file_id": "dd6068ca-007d-4d08-be05-9bc4f84db479",
+  "created_at": "2026-11-17T06:32:08.486Z",
+  "updated_at": "2026-11-17T06:32:08.486Z",
+  "empty_directories": [],
+  "source_files": [
+    {
+      "id": "dd6068ca-007d-4d08-be05-9bc4f84db479",
+      "path": "index.html",
+      "language": "html",
+      "size_bytes": 218,
+      "sha256_hex": "23f9cc1f94ff8897d26321310b0c489caa152be18d6fb1f2c2749ef097dceaa2"
+    },
+    {
+      "id": "2f92b488-d1e1-4e47-ae81-bbbc460bb8d9",
+      "path": "main.js",
+      "language": "javascript",
+      "size_bytes": 1726,
+      "sha256_hex": "1e1e2490ae1d5219e49902e72723faa9f2b18a62bc1c6630a3e98ea6a901e0d1"
+    },
+    {
+      "id": "2827df11-8b2f-4b9d-9f49-06bdc2e88257",
+      "path": "styles.css",
+      "language": "css",
+      "size_bytes": 355,
+      "sha256_hex": "f0005e82e9b60aa5ade2826ac34098e1a9e70fef651a17274a5024004f0daddc"
+    }
+  ],
+  "media_assets": []
+}
