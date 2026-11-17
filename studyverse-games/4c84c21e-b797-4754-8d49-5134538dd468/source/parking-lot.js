@@ -17,10 +17,14 @@ export function createParkingLot({bays,lot,car,scroller,onChange,onAssist}) {
     if(!width||!height)return;
     // Keep the vehicle in the unobstructed center of the full-viewport playfield.
     // The transparent HUD and touch-pad overlay the road, never steal its height.
-    const topReserved=Math.min(86,height*.16);
-    const bottomReserved=Math.min(206,height*.35);
+    const compactLandscape=height<=570&&width>=540;
+    const topReserved=compactLandscape?Math.min(60,height*.19):Math.min(86,height*.16);
+    const bottomReserved=compactLandscape?Math.min(12,height*.04):Math.min(206,height*.35);
     const usableHeight=Math.max(110,height-topReserved-bottomReserved);
-    const scale=clamp(usableHeight/TRACK_HEIGHT,.23,1.5);
+    // Landscape controls sit at the sides, so use most of the vertical road.
+    // Keep some horizontal margin for the translucent left/right game controls.
+    const landscapeWidthLimit=compactLandscape?Math.max(.23,(width-208)/track.width):Infinity;
+    const scale=clamp(Math.min(usableHeight/TRACK_HEIGHT,landscapeWidthLimit),.23,1.5);
     const worldWidth=track.width*scale,worldHeight=TRACK_HEIGHT*scale;
     const offsetX=worldWidth<=width?(width-worldWidth)/2:
       clamp(width/2-vehicle.x*scale,width-worldWidth,0);

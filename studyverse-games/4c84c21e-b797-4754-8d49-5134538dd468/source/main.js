@@ -67,6 +67,7 @@ function showSampleFallback(message){
 async function start(nextSession){
   lockGame();
   session=nextSession;item=null;finished=true;busy=true;latestGuide='';
+  ui.exit.textContent='Exit to Study Standard';
   dialog.close();dialog.setItem(null);
   ui.demo.hidden=true;ui.again.hidden=true;
   ui.exit.hidden=nextSession.kind!=='module';
@@ -122,11 +123,19 @@ ui.reset.addEventListener('click',()=>{
 ui.demo.addEventListener('click',()=>{void start(createSampleSession());});
 ui.again.addEventListener('click',()=>{void start(createSampleSession());});
 ui.exit.addEventListener('click',async()=>{
-  if(!session||session.kind!=='module'||dialog.isOpen())return;
+  // This optional navigation action stays in the question/info modal, not over the road.
+  if(!session||session.kind!=='module'||!dialog.isOpen())return;
   ui.exit.disabled=true;
-  try{await session.exit();announce('Returning to Study Standard.');lockGame();}
-  catch{announce('Could not exit automatically. Close private Preview to return to Study Standard.','error');}
-  finally{ui.exit.disabled=false;}
+  releaseAll();
+  try{
+    await session.exit();
+    dialog.close();
+    announce('Returning to Study Standard.');
+    lockGame();
+  }catch{
+    ui.exit.textContent='Retry exit to Study Standard';
+    announce('Could not exit automatically. Close private Preview to return to Study Standard.','error');
+  }finally{ui.exit.disabled=false;}
 });
 // Multiple simultaneous touch pointers work: holding up+left/right steers while accelerating.
 for(const button of driveButtons){

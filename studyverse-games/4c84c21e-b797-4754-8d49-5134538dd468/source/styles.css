@@ -47,3 +47,7 @@
 @media(max-width:395px){.game-controls{padding:0 7px}.direction{font-size:1.5rem}.park-button{min-height:56px}.status-toast{max-width:calc(100% - 192px)}}
 @media(max-height:570px) and (min-width:540px){.lot-viewport{inset:0!important}.game-controls{padding:0 8px}.guide{max-width:calc(100% - 300px)}}
 @media(max-height:390px) and (max-width:539px){.lot-viewport{inset:0!important}.touch-pad{--arrow-size:35px}}
+
+/* Keep optional Study Standard navigation inside the question modal, never over the road. */
+.modal-scroll .session-button{display:block;width:100%;margin-top:15px;min-height:48px;background:rgba(58,88,137,.44);border:1px solid rgba(211,234,255,.65);border-radius:12px;color:#eff8ff}
+.modal-scroll .session-button:not(:disabled):hover{background:rgba(72,109,172,.62)}
