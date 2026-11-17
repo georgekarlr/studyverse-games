@@ -28,3 +28,22 @@
 @media(max-height:570px) and (min-width:540px){.hud{min-height:49px;padding-top:7px;padding-bottom:6px}.lot-viewport{inset:51px 110px 8px 110px}.touch-pad{--arrow-size:clamp(38px,10vh,48px);gap:3px}.direction{border-radius:10px}.game-controls{bottom:calc(5px + var(--safe-bottom));padding:0 8px}.park-button{min-height:54px;width:83px}.reset-button{min-height:36px;width:83px}.game-shell .guide{bottom:calc(10px + var(--safe-bottom));max-width:calc(100% - 310px);padding:7px 10px}.status-toast{top:55px;bottom:auto;max-width:calc(100% - 240px)}.session-actions{top:55px}}
 @media(max-height:390px) and (max-width:539px){.lot-viewport{inset:53px 0 135px}.touch-pad{--arrow-size:35px}.direction{border-radius:9px}.park-button{min-height:45px}.reset-button{min-height:34px}.game-shell .guide{display:none}.status-toast{bottom:calc(112px + var(--safe-bottom))}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+/* Full-screen game canvas: slim transparent touch and park controls sit over the moving world.
+   Arrows remain legible on dark roads; the camera reserves their touch-safe regions. */
+.lot-viewport{inset:0!important;touch-action:pan-x pan-y}
+.hud{background:linear-gradient(180deg,rgba(8,17,34,.66),rgba(12,24,59,.13));border-bottom-color:rgba(255,255,255,.08)}
+.game-controls{pointer-events:none}
+.touch-pad,.parking-actions{pointer-events:auto}
+.direction{background:rgba(12,31,53,.27);border-color:rgba(226,241,255,.45);color:rgba(255,255,255,.96);box-shadow:0 4px 16px rgba(3,11,26,.18);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.direction.brake{background:rgba(100,34,60,.29)}
+.direction:not(:disabled):hover,.direction.is-held{background:rgba(76,108,221,.50);border-color:rgba(255,255,255,.92)}
+.park-button{background:rgba(5,108,87,.30);color:#e5fff8;border-color:rgba(142,250,213,.72);box-shadow:0 8px 24px rgba(1,27,27,.19);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+.park-button:disabled{background:rgba(24,62,76,.26);border-color:rgba(140,189,196,.46);color:#d4edea;opacity:.65}
+.reset-button{background:rgba(17,47,81,.24);border-color:rgba(226,241,255,.45);box-shadow:none}
+.guide{background:rgba(9,27,47,.55);border-color:rgba(168,220,251,.35)}
+.status-toast{background:rgba(9,27,49,.58);border-color:rgba(136,191,229,.34)}
+@media(max-width:660px){.direction{backdrop-filter:blur(4px)}.park-button{min-height:62px}.status-toast{max-width:calc(100% - 270px)}}
+@media(max-width:395px){.game-controls{padding:0 7px}.direction{font-size:1.5rem}.park-button{min-height:56px}.status-toast{max-width:calc(100% - 192px)}}
+@media(max-height:570px) and (min-width:540px){.lot-viewport{inset:0!important}.game-controls{padding:0 8px}.guide{max-width:calc(100% - 300px)}}
+@media(max-height:390px) and (max-width:539px){.lot-viewport{inset:0!important}.touch-pad{--arrow-size:35px}}

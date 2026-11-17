@@ -15,11 +15,16 @@ export function createParkingLot({bays,lot,car,scroller,onChange,onAssist}) {
     if(!track||!vehicle)return;
     const width=scroller.clientWidth,height=scroller.clientHeight;
     if(!width||!height)return;
-    const scale=clamp((height-8)/TRACK_HEIGHT,.24,1.65);
+    // Keep the vehicle in the unobstructed center of the full-viewport playfield.
+    // The transparent HUD and touch-pad overlay the road, never steal its height.
+    const topReserved=Math.min(86,height*.16);
+    const bottomReserved=Math.min(206,height*.35);
+    const usableHeight=Math.max(110,height-topReserved-bottomReserved);
+    const scale=clamp(usableHeight/TRACK_HEIGHT,.23,1.5);
     const worldWidth=track.width*scale,worldHeight=TRACK_HEIGHT*scale;
     const offsetX=worldWidth<=width?(width-worldWidth)/2:
       clamp(width/2-vehicle.x*scale,width-worldWidth,0);
-    const offsetY=Math.max(0,(height-worldHeight)/2);
+    const offsetY=topReserved+Math.max(0,(usableHeight-worldHeight)/2);
     lot.style.transform='translate3d('+offsetX.toFixed(1)+'px,'+offsetY.toFixed(1)+'px,0) scale('+scale.toFixed(4)+')';
   }
   function render(now=0){
