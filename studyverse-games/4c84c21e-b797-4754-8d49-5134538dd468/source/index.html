@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Car Parking</title>
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./focus-layout.css">
 </head>
 <body>
   <main class="game-shell" aria-labelledby="game-title">
@@ -30,10 +31,13 @@
         <div class="instrument"><span>SPEED</span><strong id="speed">0</strong></div>
         <div class="instrument"><span>STATUS</span><strong id="driving-state">READY</strong></div>
       </div>
-      <button id="info" class="info-button" type="button" aria-label="View full question and answer choices" aria-haspopup="dialog" aria-controls="question-modal" title="Question and choices">i</button>
+      <div class="hud-actions" role="group" aria-label="Game menu">
+        <button id="info" class="info-button" type="button" aria-label="View full question and answer choices" aria-haspopup="dialog" aria-controls="question-modal" title="Question and choices">i</button>
+        <button id="exit" class="exit-button" type="button" aria-label="Exit game to Study Standard" hidden>×</button>
+      </div>
     </header>
 
-    <div class="guide" id="parking-guide" role="status" aria-live="polite">Use the arrows to drive. Tap ⓘ to read the question and choices.</div>
+    <div class="guide" id="parking-guide" role="status" aria-live="polite">Driving guidance is available in the information menu.</div>
 
     <div class="game-controls" role="group" aria-label="Driving and parking controls">
       <div class="touch-pad" role="group" aria-label="Hold the direction arrows or brake to drive the car">
@@ -49,11 +53,7 @@
       </div>
     </div>
 
-    <div class="status-toast" id="status-panel"><span class="status-light" aria-hidden="true"></span><p id="status" role="status" aria-live="polite">Connecting to StudyVerse…</p></div>
-    <div class="session-actions" aria-label="Session actions">
-      <button id="demo" class="session-button" type="button" hidden>Try a sample drive</button>
-      <button id="again" class="session-button" type="button" hidden>Play sample again</button>
-    </div>
+    <div class="status-toast is-quiet" id="status-panel"><span class="status-light" aria-hidden="true"></span><p id="status" role="status" aria-live="polite">Connecting to StudyVerse…</p></div>
 
     <div id="question-modal" class="modal-backdrop" hidden>
       <section class="question-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description" tabindex="-1">
@@ -65,7 +65,10 @@
           <ol id="modal-options" class="option-list" aria-label="Complete answer choices, numbered by parking bay"></ol>
           <p id="modal-description" class="modal-note">The number next to each choice matches a numbered bay in the driving game. Choosing a bay is not an answer submission: you must park inside it. Correct choices are never revealed here.</p>
           <div class="how-to"><h3>How to drive</h3><p>Keyboard: <strong>↑</strong> accelerate, <strong>↓</strong> reverse, <strong>← / →</strong> steer, <strong>Space</strong> brake, <strong>P</strong> park and <strong>R</strong> reset. Touchscreen: hold the matching on-screen arrows. Tap a numbered bay for optional assisted driving, then park yourself.</p></div>
-          <button id="exit" class="session-button" type="button" hidden>Exit to Study Standard</button>
+          <div class="modal-session-actions" aria-label="Sample driving options">
+            <button id="demo" class="session-button" type="button" hidden>Try a sample drive</button>
+            <button id="again" class="session-button" type="button" hidden>Play sample again</button>
+          </div>
         </div>
         <button id="resume-drive" class="resume-button" type="button">Back to driving</button>
       </section>

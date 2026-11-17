@@ -17,6 +17,8 @@ function announce(message,kind='normal'){
   if(ui.status.textContent!==message)ui.status.textContent=message;
   ui.statusPanel.classList.toggle('status-error',kind==='error');
   ui.statusPanel.classList.toggle('status-success',kind==='success');
+  // Normal driving hints remain available to screen readers without covering the road.
+  ui.statusPanel.classList.toggle('is-quiet',kind==='normal');
 }
 let dialog;
 const lot=createParkingLot({
@@ -67,7 +69,6 @@ function showSampleFallback(message){
 async function start(nextSession){
   lockGame();
   session=nextSession;item=null;finished=true;busy=true;latestGuide='';
-  ui.exit.textContent='Exit to Study Standard';
   dialog.close();dialog.setItem(null);
   ui.demo.hidden=true;ui.again.hidden=true;
   ui.exit.hidden=nextSession.kind!=='module';
@@ -122,20 +123,28 @@ ui.reset.addEventListener('click',()=>{
 });
 ui.demo.addEventListener('click',()=>{void start(createSampleSession());});
 ui.again.addEventListener('click',()=>{void start(createSampleSession());});
+let exitPending=false;
 ui.exit.addEventListener('click',async()=>{
-  // This optional navigation action stays in the question/info modal, not over the road.
-  if(!session||session.kind!=='module'||!dialog.isOpen())return;
+  // The compact top-right X exits through the approved StudyVerse SDK only.
+  if(!session||session.kind!=='module'||exitPending||busy||dialog.isOpen())return;
+  exitPending=true;
   ui.exit.disabled=true;
   releaseAll();
+  lot.setPaused(true);
   try{
     await session.exit();
-    dialog.close();
-    announce('Returning to Study Standard.');
+    finished=true;
     lockGame();
+    ui.exit.hidden=true;
+    announce('Exit requested. You may close Private Preview if it remains open.');
   }catch{
-    ui.exit.textContent='Retry exit to Study Standard';
-    announce('Could not exit automatically. Close private Preview to return to Study Standard.','error');
-  }finally{ui.exit.disabled=false;}
+    lot.setPaused(false);
+    announce('Could not exit automatically. Close Private Preview to return to Study Standard.','error');
+  }finally{
+    exitPending=false;
+    ui.exit.disabled=false;
+    refreshControls();
+  }
 });
 // Multiple simultaneous touch pointers work: holding up+left/right steers while accelerating.
 for(const button of driveButtons){

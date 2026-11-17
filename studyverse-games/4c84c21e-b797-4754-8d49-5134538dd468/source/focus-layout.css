@@ -1,0 +1,85 @@
+/* Responsive, game-first fullscreen layer: independent of the bundled arcade art.
+   The world spans the viewport. All chrome, controls and game messages overlay it.
+   Car art stays visible behind translucent controls (no backdrop blur). */
+:root{--glass:rgba(11,29,52,.19);--glass-border:rgba(222,245,255,.54)}
+html,body{width:100%;height:100%;overflow:hidden}
+.game-shell{position:relative;width:100%;height:100vh;height:100dvh;min-height:0;overflow:hidden;isolation:isolate}
+.game-shell::after{pointer-events:none;background:linear-gradient(180deg,rgba(5,15,30,.26),transparent 18%,transparent 78%,rgba(5,15,30,.15))}
+.lot-viewport{position:absolute!important;inset:0!important;width:100%;height:100%;min-height:0;overflow:hidden;touch-action:none;z-index:1}
+.lot{transform-origin:0 0;will-change:transform}
+/* HUD is glass placed on the road, not a header that reduces the driving area. */
+.hud{position:absolute;z-index:30;inset:0 0 auto;display:flex;min-height:0;align-items:center;gap:clamp(4px,1vw,12px);padding:calc(5px + var(--safe-top)) max(7px,env(safe-area-inset-right,0px)) 5px max(9px,env(safe-area-inset-left,0px));border:0;background:linear-gradient(180deg,rgba(8,17,34,.94),rgba(8,17,34,.80) 78%,rgba(8,17,34,.63));pointer-events:none}
+.game-mark{display:flex;align-items:center;min-width:0;gap:7px}
+.game-mark .mark{width:31px;height:31px;flex:none;font-size:19px;border-radius:10px;opacity:.86}
+.game-mark h1{margin:0;font-size:clamp(.72rem,1.3vw,1.1rem);line-height:1.2;letter-spacing:.055em;white-space:nowrap}
+.mode-tag{font-size:.51rem;max-width:125px;letter-spacing:.035em;margin-top:1px}
+.hud-instruments{display:flex;gap:clamp(4px,.6vw,11px);align-items:center;flex:none;margin-left:auto}
+.instrument{display:flex;flex-direction:column;align-items:center;min-width:0;padding:3px clamp(4px,.7vw,10px);border:1px solid rgba(201,225,245,.21);border-radius:9px;background:rgba(14,31,55,.20)}
+.instrument>span{font-size:.52rem;letter-spacing:.045em;line-height:1.2}
+.instrument strong{font-size:clamp(.77rem,1.25vw,1.04rem);line-height:1.35}
+.hud-actions{display:flex;align-items:center;gap:clamp(3px,.6vw,9px);margin-left:clamp(2px,.9vw,12px);flex:none;pointer-events:auto}
+.info-button,.exit-button{display:grid;place-items:center;flex:none;margin:0;width:clamp(39px,3.5vw,47px);height:clamp(39px,3.5vw,47px);min-width:39px;min-height:39px;border:1px solid var(--glass-border);border-radius:13px;color:#f8fbff;background:var(--glass);box-shadow:0 4px 13px rgba(0,0,0,.13);backdrop-filter:none;-webkit-backdrop-filter:none;line-height:1}
+.info-button{font-style:italic;font-weight:900;font-size:1.35rem}
+.exit-button{font-family:ui-sans-serif,system-ui,sans-serif;font-size:1.9rem;font-weight:400;padding-bottom:4px}
+.info-button:hover,.exit-button:hover{background:rgba(23,63,99,.37);border-color:#f6ffff}
+/* Actual virtual controls are on top of the SAME driving viewport. */
+.game-controls{position:absolute;z-index:32;inset:auto 0 0;display:flex;justify-content:space-between;align-items:flex-end;gap:8px;padding:0 max(10px,env(safe-area-inset-right,0px)) calc(8px + var(--safe-bottom)) max(10px,env(safe-area-inset-left,0px));pointer-events:none}
+.touch-pad{--arrow-size:clamp(44px,4.7vw,62px);grid-template-columns:repeat(3,var(--arrow-size));grid-template-rows:repeat(3,var(--arrow-size));gap:4px;pointer-events:auto}
+.direction{width:var(--arrow-size);height:var(--arrow-size);border-radius:14px;border:1px solid var(--glass-border);background:var(--glass)!important;color:#f8ffff;box-shadow:0 4px 14px rgba(3,10,21,.13);backdrop-filter:none;-webkit-backdrop-filter:none;touch-action:none}
+.direction.brake{background:rgba(91,32,58,.22)!important}
+.direction:not(:disabled):hover,.direction.is-held{background:rgba(66,102,186,.42)!important;transform:scale(.97)}
+.parking-actions{display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:auto}
+.park-button,.reset-button{width:clamp(79px,10vw,133px);border:1px solid rgba(168,255,228,.65);border-radius:14px;background:rgba(3,112,81,.22)!important;box-shadow:0 5px 16px rgba(1,26,22,.13);color:#e8fff8;backdrop-filter:none;-webkit-backdrop-filter:none}
+.park-button{min-height:clamp(59px,8vw,81px);font-size:clamp(.76rem,1.2vw,.95rem);gap:2px}
+.park-button:disabled{background:rgba(15,65,74,.16)!important;color:#d1f3ec;border-color:rgba(172,216,215,.38);opacity:.64}
+.park-symbol{border-width:1px;width:21px;height:21px}
+.reset-button{min-height:38px;background:rgba(11,36,63,.19)!important;border-color:var(--glass-border)}
+.park-button:not(:disabled):hover,.reset-button:not(:disabled):hover{background:rgba(28,127,103,.45)!important}
+/* Driving/status text remains accessible but does not obstruct the roadway. */
+.game-shell .guide,.game-shell .status-toast.is-quiet{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;transform:none!important}
+.game-shell .status-toast:not(.is-quiet){z-index:31;top:calc(58px + var(--safe-top));bottom:auto;left:50%;right:auto;transform:translateX(-50%);max-width:min(460px,calc(100% - 18px));padding:8px 12px;background:rgba(6,26,48,.64);border:1px solid rgba(173,216,245,.55);border-radius:12px;pointer-events:none}
+.game-shell .status-toast:not(.is-quiet) p{display:block;font-size:clamp(.67rem,1.1vw,.81rem);line-height:1.4;overflow-wrap:anywhere}
+/* The only non-driving actions are contextual and live INSIDE the information dialog. */
+.modal-session-actions{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.modal-session-actions .session-button{min-height:46px;width:100%;background:rgba(48,81,139,.42);border-radius:12px}
+/* Responsive controls never create a second panel or crop the world. */
+@media(max-width:650px){
+ .hud{gap:5px}
+ .hud-instruments{gap:4px}
+ .instrument:last-child{display:none}
+ .game-mark .mark{width:28px;height:28px;font-size:17px}
+ .mode-tag{max-width:94px}
+ .game-controls{padding:0 max(7px,env(safe-area-inset-right,0px)) calc(5px + var(--safe-bottom)) max(7px,env(safe-area-inset-left,0px))}
+ .touch-pad{--arrow-size:clamp(44px,11vw,53px)}
+ .direction{border-radius:11px;font-size:1.6rem}
+ .park-button,.reset-button{width:clamp(77px,21vw,105px)}
+ .park-button{min-height:65px}
+ .reset-button{min-height:39px}
+}
+@media(max-width:385px){
+ .hud{padding-inline:6px;gap:3px}
+ .hud-instruments .instrument:nth-child(2){display:none}
+ .game-mark{gap:5px}
+ .mode-tag{font-size:.44rem;max-width:72px}
+ .game-mark h1{font-size:.7rem;letter-spacing:.015em}
+ .hud-actions{gap:4px;margin-left:3px}
+ .touch-pad{--arrow-size:44px}
+ .park-button,.reset-button{width:78px}
+ .park-button{min-height:58px}
+ .reset-button{min-height:36px}
+}
+@media(max-height:590px){
+ .hud{padding-top:calc(4px + var(--safe-top));padding-bottom:3px}
+ .mode-tag{display:none}
+ .game-controls{padding-bottom:calc(4px + var(--safe-bottom))}
+ .touch-pad{--arrow-size:clamp(42px,10.5vh,49px);gap:3px}
+ .direction{border-radius:10px}
+ .park-button{min-height:55px}
+ .reset-button{min-height:35px}
+ .game-shell .status-toast:not(.is-quiet){top:calc(48px + var(--safe-top))}
+}
+@media(max-height:320px){.touch-pad{--arrow-size:38px}.park-button{min-height:48px}.reset-button{min-height:31px}.hud-instruments .instrument:last-child{display:none}}
+@media(prefers-reduced-motion:reduce){.lot{will-change:auto}}
+
+/* Decorative road labels must never compete with the compact HUD or car. */
+.lot-title,.lane-markings span{display:none!important}
