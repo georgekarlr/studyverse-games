@@ -6,29 +6,36 @@
   "entry_path": "index.html",
   "entry_file_id": "dd6068ca-007d-4d08-be05-9bc4f84db479",
   "created_at": "2026-11-17T06:32:08.486Z",
-  "updated_at": "2026-11-17T07:17:55.483Z",
+  "updated_at": "2026-11-17T07:34:46.548Z",
   "empty_directories": [],
   "source_files": [
     {
       "id": "dd6068ca-007d-4d08-be05-9bc4f84db479",
       "path": "index.html",
       "language": "html",
-      "size_bytes": 2729,
-      "sha256_hex": "0cdedd3f9dbeaf44fc25092d9c39fddbab488d0b89d70ab820ad9c63b47d2206"
+      "size_bytes": 5130,
+      "sha256_hex": "a47cf307f2a32cc0b7ed0e3d21becdb278e85304a7a2f4ce29a17d4b3dcc3ffe"
     },
     {
       "id": "2f92b488-d1e1-4e47-ae81-bbbc460bb8d9",
       "path": "main.js",
       "language": "javascript",
-      "size_bytes": 5158,
-      "sha256_hex": "30e20933c56390202ce6d15639a237c65faba93f60b8b81a475b6b00ca93adbb"
+      "size_bytes": 7579,
+      "sha256_hex": "eabf6a418f9f9919be2fa7c6758a28f8c1faf2e046f5d0384b4a75b574052102"
     },
     {
       "id": "e322dd04-1104-4242-844c-2a9ca52443e8",
       "path": "parking-lot.js",
       "language": "javascript",
-      "size_bytes": 2772,
-      "sha256_hex": "b3594cdf125b0093a7251a30509db180bc37d40e25198aaae3c920c246df6d2b"
+      "size_bytes": 5414,
+      "sha256_hex": "93a7554eeb524e4acd8edefbb446cce8bf5b2e013b6b6a04413b2b19a40e9534"
+    },
+    {
+      "id": "c320bace-d43a-4f47-8d1d-3f9e7371edfa",
+      "path": "driving-physics.js",
+      "language": "javascript",
+      "size_bytes": 3888,
+      "sha256_hex": "d24b165f1e1f80239cb9671b34ec78848e7e24b542089abd5bfb059b673f1b01"
     },
     {
       "id": "455b787a-cb78-47cc-81b6-1304cb37db8a",
@@ -41,8 +48,8 @@
       "id": "2827df11-8b2f-4b9d-9f49-06bdc2e88257",
       "path": "styles.css",
       "language": "css",
-      "size_bytes": 5620,
-      "sha256_hex": "eda55ccfc1a5d1f37714b6ef2995d6f1031b804e8ac4ce4b62f252b4ea9e679f"
+      "size_bytes": 9353,
+      "sha256_hex": "77d98e2a125c5ed709aa18482ed64a4102452efe065fb499abb2599444bc89ee"
     }
   ],
   "media_assets": []
