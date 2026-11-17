@@ -1,35 +1,39 @@
-// Visual parking-lot controller. StudyVerse SDK loading and submission are kept in main.js.
+// World-space driving renderer with a responsive camera. No grading or SDK calls.
 import {TRACK_HEIGHT,buildTrack,startingCar,stepDriving,parkingStatus,assistedRoute,driveAssisted} from './driving-physics.js';
 
 export function createParkingLot({bays,lot,car,scroller,onChange,onAssist}) {
-  let track=null,vehicle=null,options=[],buttons=[],locked=true;
-  let waypoints=[],assistedIndex=-1,raf=0,previousFrame=0,previousReport=0;
+  let track=null,vehicle=null,options=[],buttons=[],locked=true,paused=false;
+  let waypoints=[],assistedIndex=-1,raf=0,previousFrame=0,previousReport=0,lastGuide='',lastReady=false;
   const input={forward:false,reverse:false,left:false,right:false,brake:false};
-  let lastGuide='',lastReady=false;
   const clearInput=()=>{for(const key of Object.keys(input))input[key]=false;};
+  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
   function snapshot(){
-    const parking=track&&vehicle?parkingStatus(vehicle,track):{index:-1,ready:false,reason:'Load a question to begin.'};
-    return {car:vehicle,parking,assistedIndex,assisted:waypoints.length>0,locked};
+    const parking=track&&vehicle?parkingStatus(vehicle,track):{index:-1,ready:false,reason:'Start a drive to begin.'};
+    return {car:vehicle,parking,assistedIndex,assisted:waypoints.length>0,locked,paused};
+  }
+  function positionCamera(){
+    if(!track||!vehicle)return;
+    const width=scroller.clientWidth,height=scroller.clientHeight;
+    if(!width||!height)return;
+    const scale=clamp((height-8)/TRACK_HEIGHT,.24,1.65);
+    const worldWidth=track.width*scale,worldHeight=TRACK_HEIGHT*scale;
+    const offsetX=worldWidth<=width?(width-worldWidth)/2:
+      clamp(width/2-vehicle.x*scale,width-worldWidth,0);
+    const offsetY=Math.max(0,(height-worldHeight)/2);
+    lot.style.transform='translate3d('+offsetX.toFixed(1)+'px,'+offsetY.toFixed(1)+'px,0) scale('+scale.toFixed(4)+')';
   }
   function render(now=0){
     if(!track||!vehicle)return;
     car.style.left=(vehicle.x/track.width*100)+'%';
     car.style.top=(vehicle.y/TRACK_HEIGHT*100)+'%';
     car.style.transform='translate(-50%,-50%) rotate('+vehicle.heading.toFixed(1)+'deg)';
+    positionCamera();
     const parking=parkingStatus(vehicle,track);
     for(let i=0;i<buttons.length;i++){
       buttons[i].classList.toggle('is-ready',parking.index===i&&parking.ready);
       buttons[i].classList.toggle('is-near',parking.index===i&&!parking.ready);
     }
-    if(scroller.clientWidth && car.parentElement){
-      const scale=car.parentElement.clientWidth/track.width;
-      const visibleX=vehicle.x*scale;
-      const edge=125;
-      if(visibleX<scroller.scrollLeft+edge||visibleX>scroller.scrollLeft+scroller.clientWidth-edge){
-        scroller.scrollLeft=Math.max(0,visibleX-scroller.clientWidth/2);
-      }
-    }
-    const guide=waypoints.length?('Assisted drive to Bay '+(assistedIndex+1)+' in progress. Manual steering cancels assistance.'):parking.reason;
+    const guide=waypoints.length?'Driving to Bay '+(assistedIndex+1)+'. Press an arrow to take control.':parking.reason;
     if(guide!==lastGuide||parking.ready!==lastReady||now-previousReport>125){
       lastGuide=guide;lastReady=parking.ready;previousReport=now;
       onChange({...snapshot(),guide});
@@ -37,21 +41,19 @@ export function createParkingLot({bays,lot,car,scroller,onChange,onAssist}) {
   }
   function frame(now){
     raf=0;
-    if(locked||!track||!vehicle)return;
-    const dt=Math.min((now-(previousFrame||now))/1000,0.05);
+    if(locked||paused||!track||!vehicle)return;
+    const dt=Math.min((now-(previousFrame||now))/1000,.05);
     previousFrame=now;
     if(waypoints.length){
       const next=driveAssisted(vehicle,waypoints,dt);
       vehicle=next.car;waypoints=next.waypoints;
       if(!waypoints.length)assistedIndex=-1;
-    }else{
-      vehicle=stepDriving(vehicle,input,dt,track);
-    }
+    }else vehicle=stepDriving(vehicle,input,dt,track);
     render(now);
-    raf=requestAnimationFrame(frame);
+    startFrame();
   }
   function stopFrame(){if(raf)cancelAnimationFrame(raf);raf=0;previousFrame=0;}
-  function startFrame(){if(!raf&&!locked)raf=requestAnimationFrame(frame);}
+  function startFrame(){if(!raf&&!locked&&!paused)raf=requestAnimationFrame(frame);}
   function mount(offeredOptions){
     lock();
     options=[...offeredOptions];
@@ -62,58 +64,56 @@ export function createParkingLot({bays,lot,car,scroller,onChange,onAssist}) {
     lot.style.setProperty('--bay-count',String(options.length));
     buttons=options.map((option,index)=>{
       const button=document.createElement('button');
-      button.type='button';
-      button.className='bay';
-      button.setAttribute('aria-label','Answer '+(index+1)+': '+option.text+'. Activate to drive there automatically.');
-      const number=document.createElement('span');number.className='bay-letter';number.textContent=String(index+1);
-      const text=document.createElement('span');text.className='bay-answer';text.textContent=option.text;
-      const hint=document.createElement('span');hint.className='bay-hint';hint.textContent='TAP TO AUTO-DRIVE';
-      button.append(number,text,hint);
+      button.type='button';button.className='bay';
+      button.setAttribute('aria-label','Bay '+(index+1)+': '+option.text+'. Activate for assisted driving.');
+      const badge=document.createElement('span');badge.className='bay-letter';badge.textContent=String(index+1);
+      const marker=document.createElement('span');marker.className='bay-marker';marker.setAttribute('aria-hidden','true');marker.textContent='P';
+      button.append(badge,marker);
       button.addEventListener('click',()=>assistTo(index));
       return button;
     });
     bays.replaceChildren(...buttons);
     locked=false;
     lastGuide='';previousReport=0;lastReady=false;assistedIndex=-1;
-    clearInput();
-    scroller.scrollLeft=Math.max(0,track.width/2-scroller.clientWidth/2);
-    render();
-    startFrame();
+    clearInput();waypoints=[];
+    render();startFrame();
   }
   function assistTo(index){
-    if(locked||!track||!vehicle||!options[index])return false;
+    if(locked||paused||!track||!vehicle||!options[index])return false;
     clearInput();
     waypoints=assistedRoute(vehicle,track,index);
     assistedIndex=index;
     onAssist(index+1);
-    render();
-    startFrame();
+    render();startFrame();
     return true;
   }
   function setDrive(key,held){
     if(!Object.hasOwn(input,key))return;
-    if(locked){input[key]=false;return;}
+    if(locked||paused){input[key]=false;return;}
     input[key]=Boolean(held);
     if(held&&waypoints.length){waypoints=[];assistedIndex=-1;}
     render();
   }
   function releaseControls(){clearInput();}
+  function setPaused(next){
+    paused=Boolean(next);
+    if(paused){clearInput();stopFrame();}
+    else startFrame();
+    render();
+  }
   function reset(){
-    if(locked||!track)return;
+    if(locked||paused||!track)return;
     vehicle=startingCar(track);
     waypoints=[];assistedIndex=-1;clearInput();
-    render();
-    startFrame();
+    render();startFrame();
   }
   function parkingChoice(){
-    if(locked||!track||!vehicle)return null;
+    if(locked||paused||!track||!vehicle)return null;
     const status=parkingStatus(vehicle,track);
     return status.ready?options[status.index].id:null;
   }
   function lock(){
-    locked=true;
-    clearInput();waypoints=[];assistedIndex=-1;
-    stopFrame();
+    locked=true;clearInput();waypoints=[];assistedIndex=-1;stopFrame();
     for(const button of buttons)button.disabled=true;
   }
   function park(){
@@ -124,8 +124,12 @@ export function createParkingLot({bays,lot,car,scroller,onChange,onAssist}) {
     render();
     return id;
   }
-  function canPark(){return Boolean(parkingChoice());}
-  function canDrive(){return !locked&&Boolean(track&&vehicle);}
+  function canPark(){return parkingChoice()!==null;}
+  function canDrive(){return !locked&&!paused&&Boolean(track&&vehicle);}
   function state(){return snapshot();}
-  return{mount,setDrive,releaseControls,reset,parkingChoice,park,lock,canPark,canDrive,state};
+  if(typeof ResizeObserver==='function'){
+    const observer=new ResizeObserver(()=>positionCamera());
+    observer.observe(scroller);
+  }else window.addEventListener('resize',positionCamera);
+  return {mount,setDrive,releaseControls,setPaused,reset,parkingChoice,park,lock,canPark,canDrive,state};
 }

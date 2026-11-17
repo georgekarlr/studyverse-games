@@ -1,72 +1,76 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1324">
   <title>Car Parking</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <main class="app" aria-labelledby="game-title">
-    <header class="header">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true">P</span>
-        <div><p class="eyebrow">STUDYVERSE · DRIVING CHALLENGE</p><h1 id="game-title">Car Parking</h1></div>
+  <main class="game-shell" aria-labelledby="game-title">
+    <div class="lot-viewport" id="lot-viewport" tabindex="0" aria-label="Driving game. Arrow keys steer and move the car. Use the information button to read the question and answer choices.">
+      <div class="lot" id="lot">
+        <div class="lot-title" aria-hidden="true"><span>ANSWER PARKING</span><span>DRIVE · ALIGN · PARK</span></div>
+        <div class="bays" id="bays" role="group" aria-label="Numbered answer parking bays"></div>
+        <div class="lot-divider" aria-hidden="true"></div>
+        <div class="lane-markings" aria-hidden="true"><span>DRIVING LANE</span></div>
+        <div class="start-marker" aria-hidden="true">START</div>
+        <div class="car" id="car" role="img" aria-label="Your moving car">
+          <span class="car-wheel wheel-tl"></span><span class="car-wheel wheel-tr"></span>
+          <span class="car-wheel wheel-bl"></span><span class="car-wheel wheel-br"></span>
+          <span class="car-body"><span class="car-hood"></span><span class="car-windshield"></span><span class="car-roof">★</span><span class="car-rear"></span></span>
+        </div>
       </div>
-      <span class="mode-tag" id="mode-tag">PRIVATE MODULE PREVIEW</span>
+    </div>
+
+    <header class="hud" aria-label="Game controls and information">
+      <div class="game-mark"><span class="mark" aria-hidden="true">P</span><div><h1 id="game-title">CAR PARKING</h1><span id="mode-tag" class="mode-tag">PRIVATE PREVIEW</span></div></div>
+      <div class="hud-instruments" aria-label="Driving dashboard">
+        <div class="instrument"><span>GEAR</span><strong id="gear">N</strong></div>
+        <div class="instrument"><span>SPEED</span><strong id="speed">0</strong></div>
+        <div class="instrument"><span>STATUS</span><strong id="driving-state">READY</strong></div>
+      </div>
+      <button id="info" class="info-button" type="button" aria-label="View full question and answer choices" aria-haspopup="dialog" aria-controls="question-modal" title="Question and choices">i</button>
     </header>
 
-    <section class="question-panel" aria-labelledby="question">
-      <div class="question-heading"><span class="eyebrow">YOUR MULTIPLE CHOICE CHALLENGE</span><span class="question-flag" aria-hidden="true">🏁</span></div>
-      <h2 id="question" tabindex="-1">Starting the engine…</h2>
-      <p class="question-help">Drive into the parking bay containing your answer. Stop inside the lines, then park to submit it.</p>
-    </section>
+    <div class="guide" id="parking-guide" role="status" aria-live="polite">Use the arrows to drive. Tap ⓘ to read the question and choices.</div>
 
-    <section class="field" aria-label="Car driving and answer parking">
-      <div class="dashboard">
-        <div class="instrument"><span class="instrument-label">GEAR</span><strong id="gear">N</strong></div>
-        <div class="instrument"><span class="instrument-label">ARCADE SPEED</span><strong><span id="speed">0</span><small> / 60</small></strong></div>
-        <div class="instrument"><span class="instrument-label">STEERING</span><strong id="steering">STRAIGHT</strong></div>
-        <div class="instrument status-instrument"><span class="instrument-label">PARKING</span><strong id="driving-state">GET READY</strong></div>
-        <button id="reset-car" class="reset-button" type="button" disabled>↺ Reset car</button>
+    <div class="game-controls" role="group" aria-label="Driving and parking controls">
+      <div class="touch-pad" role="group" aria-label="Hold the direction arrows or brake to drive the car">
+        <button type="button" class="direction up" data-drive="forward" aria-label="Hold to accelerate forward" disabled>↑</button>
+        <button type="button" class="direction left" data-drive="left" aria-label="Hold to steer left" disabled>←</button>
+        <button type="button" class="direction brake" data-drive="brake" aria-label="Hold to brake" disabled>■</button>
+        <button type="button" class="direction right" data-drive="right" aria-label="Hold to steer right" disabled>→</button>
+        <button type="button" class="direction down" data-drive="reverse" aria-label="Hold to reverse" disabled>↓</button>
       </div>
+      <div class="parking-actions">
+        <button id="park" class="park-button" type="button" disabled><span class="park-symbol" aria-hidden="true">P</span><span>PARK</span></button>
+        <button id="reset-car" class="reset-button" type="button" aria-label="Reset car to starting position" disabled>↺<span class="action-label"> Reset</span></button>
+      </div>
+    </div>
 
-      <div class="lot-viewport" id="lot-viewport" tabindex="0" aria-label="Parking lot. Pan sideways to see more spaces.">
-        <div class="lot" id="lot">
-          <div class="lot-title" aria-hidden="true"><span>ANSWER PARKING</span><span>🚘 DRIVE • STEER • PARK</span></div>
-          <div class="bays" id="bays" role="group" aria-label="Answer bays. Activate one for assisted driving."></div>
-          <div class="lot-divider" aria-hidden="true"></div>
-          <div class="lane-markings" aria-hidden="true"><span>DRIVING LANE</span></div>
-          <div class="start-marker" aria-hidden="true">START</div>
-          <div class="car" id="car" role="img" aria-label="Your moving car">
-            <span class="car-wheel wheel-tl"></span><span class="car-wheel wheel-tr"></span>
-            <span class="car-wheel wheel-bl"></span><span class="car-wheel wheel-br"></span>
-            <span class="car-body"><span class="car-hood"></span><span class="car-windshield"></span><span class="car-roof">★</span><span class="car-rear"></span></span>
-          </div>
-        </div>
-      </div>
+    <div class="status-toast" id="status-panel"><span class="status-light" aria-hidden="true"></span><p id="status" role="status" aria-live="polite">Connecting to StudyVerse…</p></div>
+    <div class="session-actions" aria-label="Session actions">
+      <button id="demo" class="session-button" type="button" hidden>Try a sample drive</button>
+      <button id="again" class="session-button" type="button" hidden>Play sample again</button>
+      <button id="exit" class="session-button" type="button" hidden>Exit to Study Standard</button>
+    </div>
 
-      <p id="parking-guide" class="parking-guide" role="status" aria-live="polite">Use the controls to drive. Tap an answer bay for assisted driving.</p>
-      <div class="control-area" aria-label="Driving controls">
-        <div class="drive-pad" role="group" aria-label="Hold driving controls or use keyboard">
-          <button type="button" class="drive-button forward" data-drive="forward" disabled><span aria-hidden="true">▲</span> Accelerate</button>
-          <button type="button" class="drive-button left" data-drive="left" disabled><span aria-hidden="true">◀</span> Steer left</button>
-          <button type="button" class="drive-button brake" data-drive="brake" disabled><span aria-hidden="true">■</span> Brake</button>
-          <button type="button" class="drive-button right" data-drive="right" disabled>Steer right <span aria-hidden="true">▶</span></button>
-          <button type="button" class="drive-button reverse" data-drive="reverse" disabled><span aria-hidden="true">▼</span> Reverse</button>
+    <div id="question-modal" class="modal-backdrop" hidden>
+      <section class="question-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description" tabindex="-1">
+        <header class="modal-header"><div><p class="modal-eyebrow">STUDYVERSE · MULTIPLE CHOICE</p><h2 id="modal-title">Question &amp; choices</h2></div><button id="close-info" class="close-info" type="button" aria-label="Close question and return to driving">×</button></header>
+        <div class="modal-scroll">
+          <p class="modal-label">FULL QUESTION</p>
+          <p id="modal-question" class="modal-question">Loading question…</p>
+          <p class="modal-label">PARKING BAYS · ANSWER CHOICES</p>
+          <ol id="modal-options" class="option-list" aria-label="Complete answer choices, numbered by parking bay"></ol>
+          <p id="modal-description" class="modal-note">The number next to each choice matches a numbered bay in the driving game. Choosing a bay is not an answer submission: you must park inside it. Correct choices are never revealed here.</p>
+          <div class="how-to"><h3>How to drive</h3><p>Keyboard: <strong>↑</strong> accelerate, <strong>↓</strong> reverse, <strong>← / →</strong> steer, <strong>Space</strong> brake, <strong>P</strong> park and <strong>R</strong> reset. Touchscreen: hold the matching on-screen arrows. Tap a numbered bay for optional assisted driving, then park yourself.</p></div>
         </div>
-        <div class="park-actions">
-          <button id="park" class="park-button" type="button" disabled><span aria-hidden="true">🅿</span> PARK &amp; SUBMIT ANSWER</button>
-          <p class="control-help">Hold ▲ + ◀ / ▶ to turn. Arrow keys or W A S D to drive; Space to brake; P to park; R to reset. You can also tap an answer bay for an assisted drive.</p>
-          <p class="control-help muted">The car must be inside a bay, facing along its lines and nearly stopped before parking is enabled.</p>
-        </div>
-      </div>
-    </section>
-    <section class="status-panel" aria-label="Game status"><span class="status-dot" aria-hidden="true"></span><p id="status" role="status" aria-live="polite">Connecting to StudyVerse…</p></section>
-    <footer class="footer">
-      <button class="text-button" id="demo" type="button" hidden>Try a sample question</button>
-      <button class="text-button" id="again" type="button" hidden>Drive the sample again</button>
-      <button class="text-button" id="exit" type="button" hidden>Exit to Study Standard</button>
-      <p class="small-print">Parking records the chosen option only. StudyVerse—not this Game—owns evaluation and grading.</p>
-    </footer>
+        <button id="resume-drive" class="resume-button" type="button">Back to driving</button>
+      </section>
+    </div>
   </main>
   <script type="module" src="./main.js"></script>
 </body>
