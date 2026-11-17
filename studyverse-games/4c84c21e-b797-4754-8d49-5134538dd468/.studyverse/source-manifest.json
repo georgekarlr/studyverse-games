@@ -6,29 +6,43 @@
   "entry_path": "index.html",
   "entry_file_id": "dd6068ca-007d-4d08-be05-9bc4f84db479",
   "created_at": "2026-11-17T06:32:08.486Z",
-  "updated_at": "2026-11-17T06:32:08.486Z",
+  "updated_at": "2026-11-17T07:17:55.483Z",
   "empty_directories": [],
   "source_files": [
     {
       "id": "dd6068ca-007d-4d08-be05-9bc4f84db479",
       "path": "index.html",
       "language": "html",
-      "size_bytes": 218,
-      "sha256_hex": "23f9cc1f94ff8897d26321310b0c489caa152be18d6fb1f2c2749ef097dceaa2"
+      "size_bytes": 2729,
+      "sha256_hex": "0cdedd3f9dbeaf44fc25092d9c39fddbab488d0b89d70ab820ad9c63b47d2206"
     },
     {
       "id": "2f92b488-d1e1-4e47-ae81-bbbc460bb8d9",
       "path": "main.js",
       "language": "javascript",
-      "size_bytes": 1726,
-      "sha256_hex": "1e1e2490ae1d5219e49902e72723faa9f2b18a62bc1c6630a3e98ea6a901e0d1"
+      "size_bytes": 5158,
+      "sha256_hex": "30e20933c56390202ce6d15639a237c65faba93f60b8b81a475b6b00ca93adbb"
+    },
+    {
+      "id": "e322dd04-1104-4242-844c-2a9ca52443e8",
+      "path": "parking-lot.js",
+      "language": "javascript",
+      "size_bytes": 2772,
+      "sha256_hex": "b3594cdf125b0093a7251a30509db180bc37d40e25198aaae3c920c246df6d2b"
+    },
+    {
+      "id": "455b787a-cb78-47cc-81b6-1304cb37db8a",
+      "path": "studyverse-session.js",
+      "language": "javascript",
+      "size_bytes": 3415,
+      "sha256_hex": "4ce174a535703c356a56a4ad3c04ea46f7b8e133c66aa14ff65c3e4bdf34abf7"
     },
     {
       "id": "2827df11-8b2f-4b9d-9f49-06bdc2e88257",
       "path": "styles.css",
       "language": "css",
-      "size_bytes": 355,
-      "sha256_hex": "f0005e82e9b60aa5ade2826ac34098e1a9e70fef651a17274a5024004f0daddc"
+      "size_bytes": 5620,
+      "sha256_hex": "eda55ccfc1a5d1f37714b6ef2995d6f1031b804e8ac4ce4b62f252b4ea9e679f"
     }
   ],
   "media_assets": []

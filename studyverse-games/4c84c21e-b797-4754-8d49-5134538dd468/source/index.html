@@ -1,2 +1,46 @@
 <!doctype html>
-<html lang="en"><head><link rel="stylesheet" href="./styles.css"></head><body><main id="game-screen" aria-label="Local Game preview"></main><script type="module" src="./main.js"></script></body></html>
+<html lang="en">
+<head>
+  
+  <title>Car Parking</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="app" id="app" aria-labelledby="game-title">
+    <header class="header">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">P</span><div><p class="eyebrow">STUDYVERSE • PARKING CHALLENGE</p><h1 id="game-title">Car Parking</h1></div></div>
+      <span class="mode-tag" id="mode-tag">PRIVATE MODULE PREVIEW</span>
+    </header>
+    <section class="question-panel" aria-labelledby="question">
+      <p class="eyebrow">YOUR DRIVING QUESTION</p>
+      <h2 id="question" tabindex="-1">Starting the engine…</h2>
+      <p class="question-help">Each parking bay is one answer. Drive to a bay, then park to submit your choice.</p>
+    </section>
+    <section class="field" aria-label="Interactive parking lot">
+      <div class="lot-scroll" id="lot-scroll" tabindex="0" aria-label="Parking bays; scroll sideways when needed">
+        <div class="lot" id="lot">
+          <div class="bays" id="bays" role="group" aria-label="Multiple choice answer bays"></div>
+          <div class="road" aria-hidden="true">
+            <div class="road-divider"></div>
+            <div class="car" id="car"><span class="car-window"></span><span class="car-symbol">🚙</span><span class="car-lights"></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="control-bar" role="group" aria-label="Car controls">
+        <button id="drive-left" class="control secondary" type="button" disabled aria-label="Drive to previous parking bay">← Left</button>
+        <button id="park" class="control primary" type="button" disabled>Park in this bay</button>
+        <button id="drive-right" class="control secondary" type="button" disabled aria-label="Drive to next parking bay">Right →</button>
+      </div>
+      <p class="help">Tap a bay or use ← / → to steer. Press P or the Park button to submit. You can change bays before parking.</p>
+    </section>
+    <section class="status-panel" aria-label="Game status"><span class="status-dot" aria-hidden="true"></span><p id="status" role="status" aria-live="polite">Connecting to StudyVerse…</p></section>
+    <footer class="footer">
+      <button class="text-button" id="demo" type="button" hidden>Try a sample question</button>
+      <button class="text-button" id="again" type="button" hidden>Try the sample again</button>
+      <button class="text-button" id="exit" type="button" hidden>Exit to Study Standard</button>
+      <p class="small-print">A parked bay is your selected answer, not an automatic correct score.</p>
+    </footer>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
