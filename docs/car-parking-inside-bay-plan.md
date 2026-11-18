@@ -61,3 +61,19 @@ flowchart TD
 ## Rollback / acceptance limits
 
 Revert only the new physics, synchronized source manifest and game guide against latest `stage-1`, preserving later unrelated changes. Do not erase answers, payments, source ownership, app snapshots or public release locks. A GitHub source update plus pure-function checks is **not** a verified authenticated browser/phone or real SDK-submission playthrough; explicitly record that limitation.
+
+## Completed implementation and measured verification (2026-11-18)
+
+**Implemented source revision:** [`ac057479b3f112733fe4cb78e5f4826fb58d1741`](https://github.com/georgekarlr/studyverse-games/commit/ac057479b3f112733fe4cb78e5f4826fb58d1741), parent plan commit `24c1687c3255ece9153bb72d425710b1ce55fe11`. Exactly three game-repository paths changed: `source/driving-physics.js`, `.studyverse/source-manifest.json` and `docs/car-parking-game-guide.md`. Replaced the existing narrow position/speed/heading parking gate with the actual numbered bay rectangle plus complete 50×82 sprite rotation-aware x/y envelope and a five-unit painted-line inset. Status now distinguishes center-in-box/partly protruding from fully contained ready. All existing gameplay and trusted answer-submission code is unchanged.
+
+**Actual checks executed:**
+- Pure source JavaScript syntax parsed and `buildTrack`, `parkingStatus`, `startingCar` evaluated for **2-, 4- and 24-answer bay tracks**.
+- **108 positive cases**: car centered inside each sampled bay at headings **0°, 45°, 90°, 180°**, speeds **0, 40 and 190**; every case returned `ready=true` and exactly the expected original offered bay index, including first/second/last options.
+- **216 near-boundary cases**: center inside but part of the rotated sprite protruding across top/side outline; every case gave `ready=false` while retaining the correct near-bay index and move-further-in guidance.
+- **18 outside cases**: center on the road or past a bay bottom border; all `ready=false` and `index=-1`. Existing world height **960**, starting car at **y=877**, five-car traffic file, camera, controls, and original user-facing choice IDs unchanged.
+- Exact former project manifest SHA-256 and UTF-8 source byte count were verified against actual file bytes before editing, using known SHA-256 test vector. New `driving-physics.js` SHA-256 is **`8087e4f28cf6605376bfb357a0158a8b3baab55fef27d5c66bd6e6ee1922b318`**, size **4,461 UTF-8 bytes**; existing nine unique source entries, original `multiple_choice` project and `entry_file_id=dd6068ca-007d-4d08-be05-9bc4f84db479` preserved.
+- Independent GitHub `stage-1` post-commit readback confirms exact source commit, pure `inside` geometry, no stop/heading gate, updated guide and manifest, and only three expected changed paths. Unmodified engine `parkingChoice()` **rechecks** status at Park click, and existing `main.js` **enables** Park from `lot.canPark()` on state refresh: no automatic answer or client-side grade was introduced.
+
+**Evidence limits / handoff:** This is committed and verified GitHub source plus pure code checks, **not** a signed-in Private Preview / mobile browser playthrough or a real SDK answer receipt. The owner can safely GitHub Pull this `stage-1` source in Local Game Studio (preserving any unsaved local edits), then open **Private Preview**. GitHub source edits do not retroactively change previously generated immutable Game versions and do not unlock public Code Game execution. No frontend/Worker/SQL or other production service was deployed. User-facing behavior is documented in the game's guide; shared `docs/USER_MANUAL.md` remains on Agent 3's separate claim.
+
+**Rollback:** revert only physics, manifest and game guide against current game branch with expected-head CAS. No data, user grades, paid entitlements, public Game release controls or other agent work are touched.
