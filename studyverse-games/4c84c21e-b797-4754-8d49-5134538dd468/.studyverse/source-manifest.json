@@ -6,29 +6,36 @@
   "entry_path": "index.html",
   "entry_file_id": "dd6068ca-007d-4d08-be05-9bc4f84db479",
   "created_at": "2026-11-17T06:32:08.486Z",
-  "updated_at": "2026-11-17T09:15:14.826Z",
+  "updated_at": "2026-11-18T12:55:17.785Z",
   "empty_directories": [],
   "source_files": [
     {
       "id": "dd6068ca-007d-4d08-be05-9bc4f84db479",
       "path": "index.html",
       "language": "html",
-      "size_bytes": 6023,
-      "sha256_hex": "811a7bab796af69ca99337d327473b9a09e12af9843a5130454447fea29593f6"
+      "size_bytes": 6097,
+      "sha256_hex": "dc469fb1f68727aa94d21f910ad681e91b803a4869110021ff6bbffc7e9c343d"
     },
     {
       "id": "2f92b488-d1e1-4e47-ae81-bbbc460bb8d9",
       "path": "main.js",
       "language": "javascript",
-      "size_bytes": 9131,
-      "sha256_hex": "7736b88eb176b570859530300c7296564af40fb9763d279c719a939ba153f2e4"
+      "size_bytes": 9573,
+      "sha256_hex": "84fde07bbe35e031d2f5d1c59cb1f026c8c5c8ae2f5624f1e273d2c7f00afeba"
     },
     {
       "id": "e322dd04-1104-4242-844c-2a9ca52443e8",
       "path": "parking-lot.js",
       "language": "javascript",
-      "size_bytes": 6275,
-      "sha256_hex": "4e788263b622761553d2aa6df2bedc441749b47f9efe04dbc9be339876616d65"
+      "size_bytes": 7331,
+      "sha256_hex": "b1c965de51109cf6fdbfef36b5e4206a44dc20008f1e149863ea760a5e1a8bf9"
+    },
+    {
+      "id": "c9332908-6a1a-4f22-86ae-7bc5f02798d2",
+      "path": "traffic-obstacles.js",
+      "language": "javascript",
+      "size_bytes": 2203,
+      "sha256_hex": "501d9e35afc382ec1757e0dbe038cf6e9b879fa9964be6f851ff889da5b61ccd"
     },
     {
       "id": "c320bace-d43a-4f47-8d1d-3f9e7371edfa",
@@ -55,8 +62,8 @@
       "id": "2827df11-8b2f-4b9d-9f49-06bdc2e88257",
       "path": "styles.css",
       "language": "css",
-      "size_bytes": 17026,
-      "sha256_hex": "f9fe2af663feafdc0f39986cb3db0114f7fc458bd44721738823fffb4d389eae"
+      "size_bytes": 18555,
+      "sha256_hex": "6bd5bfe4f7cade836edc57995a59bddcc836310e685c46a946b145f81a4e517d"
     },
     {
       "id": "589c9ed4-c2e4-4a62-8eb6-77f9f9f090ca",

@@ -1,9 +1,11 @@
 // World-space driving renderer with a responsive camera. No grading or SDK calls.
 import {TRACK_HEIGHT,buildTrack,startingCar,stepDriving,parkingStatus,assistedRoute,driveAssisted} from './driving-physics.js';
+import {createTraffic,stepTraffic,hitTraffic} from './traffic-obstacles.js';
 
-export function createParkingLot({bays,lot,car,scroller,onChange,onAssist}) {
+export function createParkingLot({bays,lot,car,traffic,scroller,onChange,onAssist,onCollision}) {
   let track=null,vehicle=null,options=[],buttons=[],locked=true,paused=false;
   let waypoints=[],assistedIndex=-1,raf=0,previousFrame=0,previousReport=0,lastGuide='',lastReady=false;
+  let movingCars=[],trafficNodes=[];
   const input={forward:false,reverse:false,left:false,right:false,brake:false};
   const clearInput=()=>{for(const key of Object.keys(input))input[key]=false;};
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
@@ -32,6 +34,12 @@ export function createParkingLot({bays,lot,car,scroller,onChange,onAssist}) {
     car.style.left=(vehicle.x/track.width*100)+'%';
     car.style.top=(vehicle.y/TRACK_HEIGHT*100)+'%';
     car.style.transform='translate(-50%,-50%) rotate('+vehicle.heading.toFixed(1)+'deg)';
+    for(let i=0;i<movingCars.length;i++){
+      const npc=movingCars[i],node=trafficNodes[i];
+      node.style.left=(npc.x/track.width*100)+'%';
+      node.style.top=(npc.y/TRACK_HEIGHT*100)+'%';
+      node.style.transform='translate(-50%,-50%) rotate('+(npc.direction>0?90:-90)+'deg)';
+    }
     positionCamera();
     const parking=parkingStatus(vehicle,track);
     for(let i=0;i<buttons.length;i++){
@@ -49,11 +57,17 @@ export function createParkingLot({bays,lot,car,scroller,onChange,onAssist}) {
     if(locked||paused||!track||!vehicle)return;
     const dt=Math.min((now-(previousFrame||now))/1000,.05);
     previousFrame=now;
+    movingCars=stepTraffic(movingCars,dt,track);
     if(waypoints.length){
       const next=driveAssisted(vehicle,waypoints,dt);
       vehicle=next.car;waypoints=next.waypoints;
       if(!waypoints.length)assistedIndex=-1;
     }else vehicle=stepDriving(vehicle,input,dt,track);
+    if(hitTraffic(vehicle,movingCars)){
+      vehicle=startingCar(track);
+      clearInput();waypoints=[];assistedIndex=-1;
+      onCollision?.();
+    }
     render(now);
     startFrame();
   }
@@ -67,6 +81,17 @@ export function createParkingLot({bays,lot,car,scroller,onChange,onAssist}) {
     lot.style.width=track.width+'px';
     lot.style.height=track.height+'px';
     lot.style.setProperty('--bay-count',String(options.length));
+    movingCars=createTraffic(track);
+    trafficNodes=movingCars.map((npc,index)=>{
+      const node=document.createElement('div');
+      node.className='traffic-car traffic-car--'+(index+1);
+      node.setAttribute('aria-hidden','true');
+      const body=document.createElement('span');
+      body.className='traffic-car-body';
+      node.append(body);
+      return node;
+    });
+    traffic.replaceChildren(...trafficNodes);
     buttons=options.map((option,index)=>{
       const button=document.createElement('button');
       button.type='button';button.className='bay';

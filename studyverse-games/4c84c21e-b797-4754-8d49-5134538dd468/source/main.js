@@ -12,7 +12,7 @@ const driveButtons=[...document.querySelectorAll('[data-drive]')];
 const keyMap={arrowup:'forward',w:'forward',arrowdown:'reverse',s:'reverse',arrowleft:'left',a:'left',arrowright:'right',d:'right',' ':'brake',b:'brake'};
 const driveKeys=new Set(),pointerDrives=new Map(),lastInputs=Object.create(null);
 const driveNames=['forward','reverse','left','right','brake'];
-let session=null,item=null,finished=true,busy=false,latestGuide='';
+let session=null,item=null,finished=true,busy=false,latestGuide='',collisionNotice=0;
 function announce(message,kind='normal'){
   if(ui.status.textContent!==message)ui.status.textContent=message;
   ui.statusPanel.classList.toggle('status-error',kind==='error');
@@ -22,8 +22,17 @@ function announce(message,kind='normal'){
 }
 let dialog;
 const lot=createParkingLot({
-  bays:byId('bays'),lot:byId('lot'),car:byId('car'),scroller:byId('lot-viewport'),
+  bays:byId('bays'),lot:byId('lot'),car:byId('car'),traffic:byId('traffic'),scroller:byId('lot-viewport'),
   onAssist(index){announce('Assisted driving toward Bay '+index+'. Park still requires your confirmation.');},
+  onCollision(){
+    const serial=++collisionNotice;
+    announce('Traffic collision! Back to START. Find a safe gap between the moving cars.','error');
+    window.setTimeout(()=>{
+      if(serial===collisionNotice&&!finished&&!busy&&!dialog?.isOpen()&&lot.canDrive()){
+        announce('Watch the moving traffic as you approach a numbered parking bay.');
+      }
+    },2200);
+  },
   onChange(state){
     if(!state.car)return;
     ui.gear.textContent=state.car.speed>2?'D':state.car.speed< -2?'R':'N';
@@ -68,7 +77,7 @@ function showSampleFallback(message){
 }
 async function start(nextSession){
   lockGame();
-  session=nextSession;item=null;finished=true;busy=true;latestGuide='';
+  session=nextSession;item=null;finished=true;busy=true;latestGuide='';collisionNotice++;
   dialog.close();dialog.setItem(null);
   ui.demo.hidden=true;ui.again.hidden=true;
   ui.exit.hidden=nextSession.kind!=='module';

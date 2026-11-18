@@ -14,6 +14,14 @@ Normal driving hints remain accessible to assistive technology without occupying
 
 ## General and specific UI instructions
 
+### Moving road traffic (three obstacle cars)
+
+- Exactly **three colorful traffic cars** move unpredictably along the roadway **outside** the numbered answer parking bays. Their speeds, direction reversals and gentle within-lane wandering change independently; all three stay in the driving zone, never inside an answer space.
+- Watch for gaps before you accelerate or cross their lanes. If the player's car touches traffic, it returns to **START** with a brief warning. The question remains active; no answer is submitted, marked correct/incorrect or graded by a collision. You can try again immediately.
+- The moving traffic freezes whenever the question modal pauses driving or the game is hidden; reset returns your player to START. Tapping a bay for optional assisted driving doesn't make traffic disappear; an assisted car can also be returned to START if it touches traffic.
+- Only stopping and pressing **Park** inside a numbered answer bay submits a choice. Traffic cars do not contain answers and cannot select choices.
+- All traffic uses the existing full-screen responsive camera and non-interactive decorative shapes; the HUD and touch controls remain available.
+
 - Keyboard: Up accelerate, Down reverse, Left/Right steer, Space brake, P park, R reset, I open the full question/choices.
 - Touch: Hold transparent arrows to drive. Hold accelerate and steer simultaneously using multiple touches. Brake is the middle square.
 - Park: Align inside a numbered answer bay, nearly stop and press the translucent Park control on the right. Only this action submits the selected choice.
