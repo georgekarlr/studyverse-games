@@ -9,8 +9,12 @@ const ui={
   park:byId('park'),reset:byId('reset-car'),demo:byId('demo'),again:byId('again'),exit:byId('exit')
 };
 const driveButtons=[...document.querySelectorAll('[data-drive]')];
-const keyMap={arrowup:'forward',w:'forward',arrowdown:'reverse',s:'reverse',arrowleft:'left',a:'left',arrowright:'right',d:'right',' ':'brake',b:'brake'};
-const driveKeys=new Set(),pointerDrives=new Map(),lastInputs=Object.create(null);
+const keyMap=new Map([
+  ['arrowup','forward'],['w','forward'],['arrowdown','reverse'],['s','reverse'],
+  ['arrowleft','left'],['a','left'],['arrowright','right'],['d','right'],
+  [' ','brake'],['b','brake']
+]);
+const driveKeys=new Set(),pointerDrives=new Map(),heldCommands=new Set();
 const driveNames=['forward','reverse','left','right','brake'];
 let session=null,item=null,finished=true,busy=false,latestGuide='',collisionNotice=0;
 function announce(message,kind='normal'){
@@ -50,9 +54,10 @@ function refreshControls(){
 }
 function syncControls(){
   for(const command of driveNames){
-    const pressed=[...driveKeys].some(k=>keyMap[k]===command)||[...pointerDrives.values()].includes(command);
-    if(pressed===Boolean(lastInputs[command]))continue;
-    lastInputs[command]=pressed;
+    const pressed=[...driveKeys].some(key=>keyMap.get(key)===command)||[...pointerDrives.values()].includes(command);
+    if(pressed===heldCommands.has(command))continue;
+    if(pressed)heldCommands.add(command);
+    else heldCommands.delete(command);
     lot.setDrive(command,pressed);
   }
 }
@@ -183,7 +188,7 @@ window.addEventListener('keydown',event=>{
   const key=event.key.toLowerCase();
   if(key==='i'&&!event.repeat){event.preventDefault();dialog.open();return;}
   if(!item||finished||busy)return;
-  const command=keyMap[key];
+  const command=keyMap.get(key);
   if(command && !(key===' '&&target instanceof HTMLButtonElement)){
     event.preventDefault();driveKeys.add(key);syncControls();
   }else if(key==='p'&&!event.repeat){event.preventDefault();void park();}
@@ -191,7 +196,7 @@ window.addEventListener('keydown',event=>{
 });
 window.addEventListener('keyup',event=>{
   const key=event.key.toLowerCase();
-  if(keyMap[key]&&driveKeys.delete(key))syncControls();
+  if(keyMap.has(key)&&driveKeys.delete(key))syncControls();
 });
 window.addEventListener('blur',releaseAll);
 document.addEventListener('visibilitychange',()=>{

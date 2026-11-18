@@ -6,8 +6,10 @@ export function createParkingLot({bays,lot,car,traffic,scroller,onChange,onAssis
   let track=null,vehicle=null,options=[],buttons=[],locked=true,paused=false;
   let waypoints=[],assistedIndex=-1,raf=0,previousFrame=0,previousReport=0,lastGuide='',lastReady=false;
   let movingCars=[],trafficNodes=[];
-  const input={forward:false,reverse:false,left:false,right:false,brake:false};
-  const clearInput=()=>{for(const key of Object.keys(input))input[key]=false;};
+  const input=new Map([
+    ['forward',false],['reverse',false],['left',false],['right',false],['brake',false]
+  ]);
+  const clearInput=()=>{for(const key of input.keys())input.set(key,false);};
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
   function snapshot(){
     const parking=track&&vehicle?parkingStatus(vehicle,track):{index:-1,ready:false,reason:'Start a drive to begin.'};
@@ -32,20 +34,20 @@ export function createParkingLot({bays,lot,car,traffic,scroller,onChange,onAssis
   function render(now=0){
     if(!track||!vehicle)return;
     car.style.left=(vehicle.x/track.width*100)+'%';
-    car.style.top=(vehicle.y/TRACK_HEIGHT*100)+'%';
+    car.style.setProperty('--vehicle-y',(vehicle.y/TRACK_HEIGHT*100)+'%');
     car.style.transform='translate(-50%,-50%) rotate('+vehicle.heading.toFixed(1)+'deg)';
-    for(let i=0;i<movingCars.length;i++){
-      const npc=movingCars[i],node=trafficNodes[i];
+    movingCars.forEach((npc,index)=>{
+      const node=trafficNodes.at(index);
       node.style.left=(npc.x/track.width*100)+'%';
-      node.style.top=(npc.y/TRACK_HEIGHT*100)+'%';
+      node.style.setProperty('--vehicle-y',(npc.y/TRACK_HEIGHT*100)+'%');
       node.style.transform='translate(-50%,-50%) rotate('+(npc.direction>0?90:-90)+'deg)';
-    }
+    });
     positionCamera();
     const parking=parkingStatus(vehicle,track);
-    for(let i=0;i<buttons.length;i++){
-      buttons[i].classList.toggle('is-ready',parking.index===i&&parking.ready);
-      buttons[i].classList.toggle('is-near',parking.index===i&&!parking.ready);
-    }
+    buttons.forEach((button,index)=>{
+      button.classList.toggle('is-ready',parking.index===index&&parking.ready);
+      button.classList.toggle('is-near',parking.index===index&&!parking.ready);
+    });
     const guide=waypoints.length?'Driving to Bay '+(assistedIndex+1)+'. Press an arrow to take control.':parking.reason;
     if(guide!==lastGuide||parking.ready!==lastReady||now-previousReport>125){
       lastGuide=guide;lastReady=parking.ready;previousReport=now;
@@ -62,7 +64,10 @@ export function createParkingLot({bays,lot,car,traffic,scroller,onChange,onAssis
       const next=driveAssisted(vehicle,waypoints,dt);
       vehicle=next.car;waypoints=next.waypoints;
       if(!waypoints.length)assistedIndex=-1;
-    }else vehicle=stepDriving(vehicle,input,dt,track);
+    }else vehicle=stepDriving(vehicle,{
+      forward:input.get('forward'),reverse:input.get('reverse'),left:input.get('left'),
+      right:input.get('right'),brake:input.get('brake')
+    },dt,track);
     if(hitTraffic(vehicle,movingCars)){
       vehicle=startingCar(track);
       clearInput();waypoints=[];assistedIndex=-1;
@@ -109,7 +114,7 @@ export function createParkingLot({bays,lot,car,traffic,scroller,onChange,onAssis
     render();startFrame();
   }
   function assistTo(index){
-    if(locked||paused||!track||!vehicle||!options[index])return false;
+    if(locked||paused||!track||!vehicle||!options.at(index))return false;
     clearInput();
     waypoints=assistedRoute(vehicle,track,index);
     assistedIndex=index;
@@ -118,9 +123,9 @@ export function createParkingLot({bays,lot,car,traffic,scroller,onChange,onAssis
     return true;
   }
   function setDrive(key,held){
-    if(!Object.hasOwn(input,key))return;
-    if(locked||paused){input[key]=false;return;}
-    input[key]=Boolean(held);
+    if(!input.has(key))return;
+    if(locked||paused){input.set(key,false);return;}
+    input.set(key,Boolean(held));
     if(held&&waypoints.length){waypoints=[];assistedIndex=-1;}
     render();
   }
@@ -140,7 +145,7 @@ export function createParkingLot({bays,lot,car,traffic,scroller,onChange,onAssis
   function parkingChoice(){
     if(locked||paused||!track||!vehicle)return null;
     const status=parkingStatus(vehicle,track);
-    return status.ready?options[status.index].id:null;
+    return status.ready?options.at(status.index).id:null;
   }
   function lock(){
     locked=true;clearInput();waypoints=[];assistedIndex=-1;stopFrame();

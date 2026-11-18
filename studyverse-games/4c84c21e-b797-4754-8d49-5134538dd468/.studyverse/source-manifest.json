@@ -6,15 +6,15 @@
   "entry_path": "index.html",
   "entry_file_id": "dd6068ca-007d-4d08-be05-9bc4f84db479",
   "created_at": "2026-11-17T06:32:08.486Z",
-  "updated_at": "2026-11-18T13:27:09.146Z",
+  "updated_at": "2026-11-18T14:00:54.078Z",
   "empty_directories": [],
   "source_files": [
     {
       "id": "c320bace-d43a-4f47-8d1d-3f9e7371edfa",
       "path": "driving-physics.js",
       "language": "javascript",
-      "size_bytes": 4461,
-      "sha256_hex": "8087e4f28cf6605376bfb357a0158a8b3baab55fef27d5c66bd6e6ee1922b318"
+      "size_bytes": 4502,
+      "sha256_hex": "adeb81a078c89ab156aa721c30ab12e6851a61f784d7d59d41ef96211fb0040f"
     },
     {
       "id": "589c9ed4-c2e4-4a62-8eb6-77f9f9f090ca",
@@ -34,22 +34,22 @@
       "id": "2f92b488-d1e1-4e47-ae81-bbbc460bb8d9",
       "path": "main.js",
       "language": "javascript",
-      "size_bytes": 9573,
-      "sha256_hex": "84fde07bbe35e031d2f5d1c59cb1f026c8c5c8ae2f5624f1e273d2c7f00afeba"
+      "size_bytes": 9683,
+      "sha256_hex": "e5b555e3c175e9bea256ab5822330d065f2478e4adb7c6f0815d4049f595918b"
     },
     {
       "id": "e322dd04-1104-4242-844c-2a9ca52443e8",
       "path": "parking-lot.js",
       "language": "javascript",
-      "size_bytes": 7331,
-      "sha256_hex": "b1c965de51109cf6fdbfef36b5e4206a44dc20008f1e149863ea760a5e1a8bf9"
+      "size_bytes": 7550,
+      "sha256_hex": "21dcfaa9a68a8d572f79e6fbc8a44a7979b39bd2f06fa66498aa6049d795af05"
     },
     {
       "id": "2cb632e9-5138-4e8e-a65f-6825963641e0",
       "path": "question-dialog.js",
       "language": "javascript",
-      "size_bytes": 2485,
-      "sha256_hex": "397e5c108a7114888bf1f3610eb9c1bdaef2da5a6c1581b5a298b55aee7ac0c7"
+      "size_bytes": 2481,
+      "sha256_hex": "d1fb985afe7b5551e321ecd2976358e6487ce500ddc67a2c22c95f7af6997f72"
     },
     {
       "id": "455b787a-cb78-47cc-81b6-1304cb37db8a",
@@ -62,15 +62,15 @@
       "id": "2827df11-8b2f-4b9d-9f49-06bdc2e88257",
       "path": "styles.css",
       "language": "css",
-      "size_bytes": 18840,
-      "sha256_hex": "9d200168d809781b19a23da386b1221a0b9c39fc988c321239c571d16ab8cc62"
+      "size_bytes": 18885,
+      "sha256_hex": "9a10d2581a44e8078974062e0070a9999a0482db334cb7869592d7fb4e46ee9f"
     },
     {
       "id": "c9332908-6a1a-4f22-86ae-7bc5f02798d2",
       "path": "traffic-obstacles.js",
       "language": "javascript",
-      "size_bytes": 2232,
-      "sha256_hex": "cb182590cfd2ccd9571fbcde47941896380b1ba2fb1ed87ab79c0fdb200fe1cf"
+      "size_bytes": 2235,
+      "sha256_hex": "18edd578575285d52cefb10cb7b4c0e2db80e9ed200dc702bbe49efeedbb915f"
     }
   ],
   "media_assets": []

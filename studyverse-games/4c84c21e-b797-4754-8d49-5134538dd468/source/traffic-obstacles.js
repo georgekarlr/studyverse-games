@@ -11,7 +11,7 @@ export function createTraffic(track,rng=Math.random) {
   return ROAD_BANDS.map((laneY,id)=>({
     id,
     laneY,
-    x:clamp(track.width*offsets[id]+randomBetween(rng,-28,28),SIDE_MARGIN,track.width-SIDE_MARGIN),
+    x:clamp(track.width*offsets.at(id)+randomBetween(rng,-28,28),SIDE_MARGIN,track.width-SIDE_MARGIN),
     y:laneY,
     targetY:laneY,
     direction:rng()<0.5?-1:1,

@@ -14,7 +14,7 @@ export function buildTrack(numberOfBays) {
     x:55 + index*slotWidth,
     centerX:55 + (index+0.5)*slotWidth,
     width:slotWidth,
-    top:70,bottom:269
+    minY:70,maxY:269
   }));
   return {width,height:TRACK_HEIGHT,bays};
 }
@@ -50,7 +50,7 @@ export function parkingStatus(car,track) {
   // The complete rotated 50 × 82 player car must fit inside its painted outline.
   const bay=track.bays.find(row=>
     car.x>=row.x && car.x<=row.x+row.width &&
-    car.y>=row.top && car.y<=row.bottom
+    car.y>=row.minY && car.y<=row.maxY
   );
   if(!bay) return {index:-1,ready:false,reason:'Drive into a marked answer bay to park.'};
   const angle=(Number.isFinite(car.heading)?car.heading:0)*Math.PI/180;
@@ -59,8 +59,8 @@ export function parkingStatus(car,track) {
   const inset=5; // Keep the sprite inside the painted boundary even when turned sideways.
   const inside=car.x-halfWidth>=bay.x+inset &&
     car.x+halfWidth<=bay.x+bay.width-inset &&
-    car.y-halfHeight>=bay.top+inset &&
-    car.y+halfHeight<=bay.bottom-inset;
+    car.y-halfHeight>=bay.minY+inset &&
+    car.y+halfHeight<=bay.maxY-inset;
   return {index:bay.index,ready:inside,reason:inside
     ? 'Inside Bay '+(bay.index+1)+'. Press Park to submit this answer.'
     : 'Bay '+(bay.index+1)+': move your whole car inside the parking lines.'};
@@ -68,7 +68,7 @@ export function parkingStatus(car,track) {
 // Assisted driving follows a road waypoint and then enters the chosen parking bay.
 // It moves the car through actual positions and stops; it never submits an answer.
 export function assistedRoute(car,track,bayIndex) {
-  const bay=track.bays[bayIndex];
+  const bay=track.bays.find(candidate=>candidate.index===bayIndex);
   if(!bay) return [];
   // Stage horizontal alignment below the last traffic band when starting near START.
   // Once nearer a bay, never force an unnecessary retreat to the far end.
@@ -80,7 +80,8 @@ export function driveAssisted(car,waypoints,seconds) {
   const next=[...waypoints];
   let state={...car},remaining=158*dt;
   while(next.length&&remaining>0){
-    const point=next[0],dx=point.x-state.x,dy=point.y-state.y;
+    const [point]=next;
+    const dx=point.x-state.x,dy=point.y-state.y;
     const distance=Math.hypot(dx,dy);
     if(distance<0.01){next.shift();continue;}
     const distanceToMove=Math.min(distance,remaining);

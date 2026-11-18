@@ -42,7 +42,8 @@ export function createQuestionDialog({trigger,backdrop,closeButton,resumeButton,
     const focusables=[...panel.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),[tabindex]:not([tabindex="-1"])')]
       .filter(node=>!node.closest('[hidden]'));
     if(!focusables.length){event.preventDefault();panel.focus();return;}
-    const first=focusables[0],last=focusables[focusables.length-1];
+    const [first]=focusables;
+    const last=focusables.at(-1);
     if(event.shiftKey && (document.activeElement===first||!panel.contains(document.activeElement))){event.preventDefault();last.focus();}
     else if(!event.shiftKey && (document.activeElement===last||!panel.contains(document.activeElement))){event.preventDefault();first.focus();}
   }
