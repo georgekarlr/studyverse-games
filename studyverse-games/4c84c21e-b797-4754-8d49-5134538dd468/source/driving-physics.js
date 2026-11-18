@@ -1,5 +1,5 @@
 // Stateless arcade steering and geometrical parking rules, independent of the DOM and SDK.
-export const TRACK_HEIGHT = 620;
+export const TRACK_HEIGHT = 960;
 const clamp = (value,min,max) => Math.max(min,Math.min(max,value));
 const approach = (value,amount) => value>0?Math.max(0,value-amount):Math.min(0,value+amount);
 
@@ -19,7 +19,7 @@ export function buildTrack(numberOfBays) {
   return {width,height:TRACK_HEIGHT,bays};
 }
 export function startingCar(track) {
-  return {x:track.width/2,y:537,heading:0,speed:0};
+  return {x:track.width/2,y:track.height-83,heading:0,speed:0};
 }
 export function shortestAngle(a,b) {
   return ((a-b+540)%360)-180;
@@ -62,7 +62,10 @@ export function parkingStatus(car,track) {
 export function assistedRoute(car,track,bayIndex) {
   const bay=track.bays[bayIndex];
   if(!bay) return [];
-  return [{x:car.x,y:342},{x:bay.centerX,y:342},{x:bay.centerX,y:192}];
+  // Stage horizontal alignment below the last traffic band when starting near START.
+  // Once nearer a bay, never force an unnecessary retreat to the far end.
+  const approachY=Math.max(342,Math.min(car.y,track.height-145));
+  return [{x:car.x,y:approachY},{x:bay.centerX,y:approachY},{x:bay.centerX,y:192}];
 }
 export function driveAssisted(car,waypoints,seconds) {
   const dt=clamp(Number.isFinite(seconds)?seconds:0,0,0.05);

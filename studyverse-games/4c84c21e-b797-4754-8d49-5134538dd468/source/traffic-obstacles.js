@@ -1,13 +1,13 @@
 // Pure, composable world-space NPC traffic: no DOM, SDK or answer access.
-export const TRAFFIC_CAR_COUNT = 3;
-const ROAD_BANDS = [330,395,460];
+export const TRAFFIC_CAR_COUNT = 5;
+const ROAD_BANDS = [335,430,525,620,715];
 const SIDE_MARGIN = 67;
 const clamp = (value,min,max) => Math.max(min,Math.min(max,value));
 const randomBetween = (rng,min,max) => min+(max-min)*clamp(Number(rng())||0,0,1);
 
-// Each car stays in a separate road band below the parking bays (y <= 269).
+// All five cars stay in separate driving-road bands below the parking bays (y <= 269).
 export function createTraffic(track,rng=Math.random) {
-  const offsets=[0.18,0.49,0.82];
+  const offsets=[0.18,0.49,0.82,0.32,0.67];
   return ROAD_BANDS.map((laneY,id)=>({
     id,
     laneY,

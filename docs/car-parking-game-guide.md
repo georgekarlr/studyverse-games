@@ -21,9 +21,10 @@ Normal driving hints remain accessible to assistive technology without occupying
 - Exit: The adjacent top-right X invokes the existing StudyVerse Module SDK exit method. It is intentionally hidden if no Module SDK is available for a standalone sample; the preview host still owns its outer Close button.
 - All overlays remain inside the Game document; actual browser/OS fullscreen is controlled by the StudyVerse preview host and device.
 
-### Moving road traffic (three obstacle cars)
+### Moving road traffic (five obstacle cars)
 
-- Exactly **three colorful traffic cars** move unpredictably along the roadway **outside** the numbered answer parking bays. Their speeds, direction reversals and gentle within-lane wandering change independently; all three stay in the driving zone, never inside an answer space.
+- Exactly **five colorful traffic cars** move unpredictably in distinct road lanes **outside** the numbered answer parking bays. Three original cars are joined by violet and lime cars. Their speeds, direction reversals and gentle within-lane wandering change independently; all five remain outside every answer space.
+- The starting area is now farther from the parking bays: the world is 960 units tall instead of 620, and the car begins near the bottom with roughly twice the distance to the answer spaces. The camera follows you along the longer road. Five dashed road stripes help distinguish the traffic rows.
 - Watch for gaps before you accelerate or cross their lanes. If the player's car touches traffic, it returns to **START** with a brief warning. The question remains active; no answer is submitted, marked correct/incorrect or graded by a collision. You can try again immediately.
 - The moving traffic freezes whenever the question modal pauses driving or the game is hidden; reset returns your player to START. Tapping a bay for optional assisted driving doesn't make traffic disappear; an assisted car can also be returned to START if it touches traffic.
 - Only stopping and pressing **Park** inside a numbered answer bay submits a choice. Traffic cars do not contain answers and cannot select choices.
