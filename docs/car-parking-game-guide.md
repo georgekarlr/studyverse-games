@@ -16,7 +16,7 @@ Normal driving hints remain accessible to assistive technology without occupying
 
 - Keyboard: Up accelerate, Down reverse, Left/Right steer, Space brake, P park, R reset, I open the full question/choices.
 - Touch: Hold transparent arrows to drive. Hold accelerate and steer simultaneously using multiple touches. Brake is the middle square.
-- Park: Align inside a numbered answer bay, nearly stop and press the translucent Park control on the right. Only this action submits the selected choice.
+- Park: Drive the whole car inside a numbered parking box. The bay turns green and Park becomes clickable as soon as the entire car fits, regardless of its speed or angle. Press Park to submit; simply entering a box does not submit.
 - Information: Tap the small i button in the upper right to pause and read the complete learner-visible question and numbered choices. Sample-only controls also live in this modal.
 - Exit: The adjacent top-right X invokes the existing StudyVerse Module SDK exit method. It is intentionally hidden if no Module SDK is available for a standalone sample; the preview host still owns its outer Close button.
 - All overlays remain inside the Game document; actual browser/OS fullscreen is controlled by the StudyVerse preview host and device.
@@ -27,7 +27,7 @@ Normal driving hints remain accessible to assistive technology without occupying
 - The starting area is now farther from the parking bays: the world is 960 units tall instead of 620, and the car begins near the bottom with roughly twice the distance to the answer spaces. The camera follows you along the longer road. Five dashed road stripes help distinguish the traffic rows.
 - Watch for gaps before you accelerate or cross their lanes. If the player's car touches traffic, it returns to **START** with a brief warning. The question remains active; no answer is submitted, marked correct/incorrect or graded by a collision. You can try again immediately.
 - The moving traffic freezes whenever the question modal pauses driving or the game is hidden; reset returns your player to START. Tapping a bay for optional assisted driving doesn't make traffic disappear; an assisted car can also be returned to START if it touches traffic.
-- Only stopping and pressing **Park** inside a numbered answer bay submits a choice. Traffic cars do not contain answers and cannot select choices.
+- Only pressing **Park** while the entire player car is still inside a numbered box submits a choice. If part of the car crosses the painted outline, move farther inside. Traffic cars cannot select answers.
 - All traffic uses the existing full-screen responsive camera and non-interactive decorative shapes; the HUD and touch controls remain available.
 
 

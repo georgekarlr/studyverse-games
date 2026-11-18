@@ -46,16 +46,24 @@ export function stepDriving(car,inputs,seconds,track) {
   return {x:boundedX,y:boundedY,heading,speed};
 }
 export function parkingStatus(car,track) {
-  const bay=track.bays.find(row=>{
-    const safeWidth=Math.max(38,Math.min(80,row.width/2-27));
-    return Math.abs(car.x-row.centerX)<=safeWidth && car.y>=150 && car.y<=223;
-  });
+  // Detect the actual numbered parking box, not an invisible narrow center strip.
+  // The complete rotated 50 × 82 player car must fit inside its painted outline.
+  const bay=track.bays.find(row=>
+    car.x>=row.x && car.x<=row.x+row.width &&
+    car.y>=row.top && car.y<=row.bottom
+  );
   if(!bay) return {index:-1,ready:false,reason:'Drive into a marked answer bay to park.'};
-  if(Math.abs(car.speed)>15) return {index:bay.index,ready:false,reason:'Bay '+(bay.index+1)+': brake until the car stops.'};
-  if(Math.min(Math.abs(shortestAngle(car.heading,0)),Math.abs(shortestAngle(car.heading,180)))>36){
-    return {index:bay.index,ready:false,reason:'Bay '+(bay.index+1)+': align your car with the parking lines.'};
-  }
-  return {index:bay.index,ready:true,reason:'Aligned in Bay '+(bay.index+1)+'. Park to submit this answer.'};
+  const angle=(Number.isFinite(car.heading)?car.heading:0)*Math.PI/180;
+  const cos=Math.abs(Math.cos(angle)),sin=Math.abs(Math.sin(angle));
+  const halfWidth=25*cos+41*sin,halfHeight=25*sin+41*cos;
+  const inset=5; // Keep the sprite inside the painted boundary even when turned sideways.
+  const inside=car.x-halfWidth>=bay.x+inset &&
+    car.x+halfWidth<=bay.x+bay.width-inset &&
+    car.y-halfHeight>=bay.top+inset &&
+    car.y+halfHeight<=bay.bottom-inset;
+  return {index:bay.index,ready:inside,reason:inside
+    ? 'Inside Bay '+(bay.index+1)+'. Press Park to submit this answer.'
+    : 'Bay '+(bay.index+1)+': move your whole car inside the parking lines.'};
 }
 // Assisted driving follows a road waypoint and then enters the chosen parking bay.
 // It moves the car through actual positions and stops; it never submits an answer.
