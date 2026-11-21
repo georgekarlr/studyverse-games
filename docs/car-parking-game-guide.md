@@ -70,3 +70,7 @@ There is no answer key, self-scoring, release permission, public gameplay unlock
 ## Rollback
 
 Revert the scoped Car Parking source commit against the latest stage-1 head. No changes to the main StudyVerse frontend, Worker, Study Standard, database, account permissions, public release or payment system are needed.
+
+## Public Free Play (standalone)
+
+Open **[Car parking — Play](https://studyverse-car-parking-free-play.georgekarlr.workers.dev/)** to drive in a normal browser. No sign-in is needed. The game loads its built-in Multiple Choice driving challenge directly; it is intended for fun and is **not an official StudyVerse Study Session**. Results are not graded, scored or saved. This is not a beta-labeled release. Use arrow keys/WASD to drive, Space to brake, P to park, R to reset and I to open the question; on mobile, hold the on-screen arrows. A separate signed StudyVerse saved-v2 release has **not** been enabled. This Free Play host intentionally cannot access your StudyVerse account.
