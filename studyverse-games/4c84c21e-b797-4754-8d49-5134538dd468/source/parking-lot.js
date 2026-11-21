@@ -85,7 +85,6 @@ export function createParkingLot({bays,lot,car,traffic,scroller,onChange,onAssis
     vehicle=startingCar(track);
     lot.style.width=track.width+'px';
     lot.style.height=track.height+'px';
-    lot.style.setProperty('--bay-count',String(options.length));
     movingCars=createTraffic(track);
     trafficNodes=movingCars.map((npc,index)=>{
       const node=document.createElement('div');
