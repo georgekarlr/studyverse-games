@@ -14,7 +14,13 @@ export function normalizeMultipleChoice(raw) {
   if (typeof raw.id !== 'string' || !raw.id.trim()) throw new Error('The Study Item has no valid ID.');
   const content = raw.content;
   if (!content || typeof content.question !== 'string' || !content.question.trim()) throw new Error('The Multiple Choice question is unavailable.');
-  if (!Array.isArray(content.options) || content.options.length < 2) throw new Error('The question must offer at least two parking bays.');
+  if (!Array.isArray(content.options) || content.options.length < 2)
+    throw new Error('The question must offer at least two parking bays.');
+  // Study Standard accepts up to 30 choices; the road can render at most 24.
+  // Fail before mounting the road, rather than converting a valid Study Item
+  // into a broken sample drive or an unverified answer attempt.
+  if (content.options.length > 24)
+    throw new Error('This parking Game supports at most 24 answer bays. Use Study Standard for this question.');
   const seen = new Set();
   const options = content.options.map((option) => {
     if (!option || typeof option.id !== 'string' || !option.id.trim() || typeof option.text !== 'string' || !option.text.trim() || seen.has(option.id)) {
@@ -32,14 +38,19 @@ export function createModuleSession(sdk) {
     throw new Error('StudyVerse Module SDK is unavailable. Use the private Game preview or try the sample.');
   }
   let submitted = false;
+  const exitIncompatible = async (message) => {
+    if (typeof sdk.exitToStandard === 'function') await sdk.exitToStandard();
+    throw new Error(message);
+  };
   return {
     kind:'module',
     async load() {
       const raw = await sdk.getItem();
-      if (raw && raw.item_type !== 'multiple_choice') {
-        if (typeof sdk.exitToStandard === 'function') await sdk.exitToStandard();
-        throw new Error('This Game is fixed to Multiple Choice. Returning to Study Standard.');
-      }
+      if (raw && raw.item_type !== 'multiple_choice')
+        return exitIncompatible('This Game is fixed to Multiple Choice. Returning to Study Standard.');
+      if (raw && raw.content && Array.isArray(raw.content.options) &&
+          raw.content.options.length > 24)
+        return exitIncompatible('This parking Game supports at most 24 answer bays. Returning to Study Standard.');
       return normalizeMultipleChoice(raw);
     },
     async submit(item, optionId) {
