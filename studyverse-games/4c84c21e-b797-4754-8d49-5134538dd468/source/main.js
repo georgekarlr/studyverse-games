@@ -8,14 +8,15 @@ const ui={
   gear:byId('gear'),speed:byId('speed'),drivingState:byId('driving-state'),guide:byId('parking-guide'),
   park:byId('park'),reset:byId('reset-car'),demo:byId('demo'),again:byId('again'),exit:byId('exit')
 };
-const driveButtons=[...document.querySelectorAll('[data-drive]')];
+const driveNames=['forward','reverse','left','right','brake'];
+const driveButtons=driveNames.map(command=>({command,button:byId('drive-'+command)}));
+const setVisible=(element,visible)=>element.classList.toggle('is-hidden',!visible);
 const keyMap=new Map([
   ['arrowup','forward'],['w','forward'],['arrowdown','reverse'],['s','reverse'],
   ['arrowleft','left'],['a','left'],['arrowright','right'],['d','right'],
   [' ','brake'],['b','brake']
 ]);
 const driveKeys=new Set(),pointerDrives=new Map(),heldCommands=new Set();
-const driveNames=['forward','reverse','left','right','brake'];
 let session=null,item=null,finished=true,busy=false,latestGuide='',collisionNotice=0;
 function announce(message,kind='normal'){
   if(ui.status.textContent!==message)ui.status.textContent=message;
@@ -50,7 +51,7 @@ function refreshControls(){
   const active=Boolean(item)&&!finished&&!busy&&!dialog?.isOpen()&&lot.canDrive();
   ui.park.disabled=!active||!lot.canPark();
   ui.reset.disabled=!active;
-  for(const button of driveButtons)button.disabled=!active;
+  for(const {button} of driveButtons)button.disabled=!active;
 }
 function syncControls(){
   for(const command of driveNames){
@@ -63,7 +64,7 @@ function syncControls(){
 }
 function releaseAll(){
   driveKeys.clear();pointerDrives.clear();syncControls();
-  for(const button of driveButtons)button.classList.remove('is-held');
+  for(const {button} of driveButtons)button.classList.remove('is-held');
 }
 dialog=createQuestionDialog({
   trigger:byId('info'),backdrop:byId('question-modal'),closeButton:byId('close-info'),
@@ -76,7 +77,7 @@ function showSampleFallback(message){
   item=null;finished=true;busy=false;lockGame();
   dialog.setItem(null);
   ui.mode.textContent='SAMPLE AVAILABLE';
-  ui.demo.hidden=false;ui.again.hidden=true;ui.exit.hidden=true;
+  setVisible(ui.demo,true);setVisible(ui.again,false);setVisible(ui.exit,false);
   ui.guide.textContent='Open ⓘ for how to drive, or start a sample game.';
   announce(message,'error');
 }
@@ -84,8 +85,8 @@ async function start(nextSession){
   lockGame();
   session=nextSession;item=null;finished=true;busy=true;latestGuide='';collisionNotice++;
   dialog.close();dialog.setItem(null);
-  ui.demo.hidden=true;ui.again.hidden=true;
-  ui.exit.hidden=nextSession.kind!=='module';
+  setVisible(ui.demo,false);setVisible(ui.again,false);
+  setVisible(ui.exit,nextSession.kind==='module');
   ui.mode.textContent=nextSession.kind==='module'?'PRIVATE PREVIEW':'SAMPLE • NO GRADE';
   ui.drivingState.textContent='LOADING';
   ui.guide.textContent='Starting the engine…';
@@ -121,7 +122,7 @@ async function park(){
     const receipt=await session.submit(item,parked);
     if(session.kind==='sample'){
       announce('Sample parked. No answer was checked, graded or saved.','success');
-      ui.again.hidden=false;
+      setVisible(ui.again,true);
     }else if(receipt&&receipt.status==='preview_only'){
       announce('Private preview received the parked choice. No correctness or score was recorded.','success');
     }else announce('Choice submitted. Only StudyVerse can grade an actual learner answer.','success');
@@ -149,7 +150,7 @@ ui.exit.addEventListener('click',async()=>{
     await session.exit();
     finished=true;
     lockGame();
-    ui.exit.hidden=true;
+    setVisible(ui.exit,false);
     announce('Exit requested. You may close Private Preview if it remains open.');
   }catch{
     lot.setPaused(false);
@@ -161,8 +162,7 @@ ui.exit.addEventListener('click',async()=>{
   }
 });
 // Multiple simultaneous touch pointers work: holding up+left/right steers while accelerating.
-for(const button of driveButtons){
-  const command=button.dataset.drive;
+for(const {button,command} of driveButtons){
   button.addEventListener('pointerdown',event=>{
     if(button.disabled||dialog.isOpen())return;
     event.preventDefault();
@@ -183,7 +183,8 @@ for(const button of driveButtons){
 window.addEventListener('keydown',event=>{
   if(dialog.isOpen())return;
   const target=event.target;
-  if(target instanceof HTMLElement&&(target.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(target.tagName)))return;
+  if(target&&(target.isContentEditable===true||
+     ['INPUT','TEXTAREA','SELECT'].includes(String(target.tagName||'').toUpperCase())))return;
   if(event.altKey||event.ctrlKey||event.metaKey)return;
   const key=event.key.toLowerCase();
   if(key==='i'&&!event.repeat){event.preventDefault();dialog.open();return;}

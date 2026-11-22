@@ -1,6 +1,6 @@
 // Accessible, pause-on-open read-only Study Item overlay. Never receives an answer key.
 export function createQuestionDialog({trigger,backdrop,closeButton,resumeButton,questionNode,optionsNode,onOpen,onClose}) {
-  const panel=backdrop.querySelector('[role="dialog"]');
+  const panel=document.getElementById('question-dialog-panel');
   let opened=false;
   let restoreFocus=null;
   function setItem(item) {
@@ -23,15 +23,15 @@ export function createQuestionDialog({trigger,backdrop,closeButton,resumeButton,
     restoreFocus=document.activeElement;
     opened=true;
     onOpen();
-    backdrop.hidden=false;
+    backdrop.classList.remove('is-hidden');
     closeButton.focus();
   }
   function close() {
     if(!opened)return;
     opened=false;
-    backdrop.hidden=true;
+    backdrop.classList.add('is-hidden');
     onClose();
-    if(restoreFocus instanceof HTMLElement && restoreFocus.isConnected)restoreFocus.focus();
+    if(restoreFocus?.isConnected && typeof restoreFocus.focus==='function')restoreFocus.focus();
     else trigger.focus();
     restoreFocus=null;
   }
@@ -39,8 +39,9 @@ export function createQuestionDialog({trigger,backdrop,closeButton,resumeButton,
     if(!opened)return;
     if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close();return;}
     if(event.key!=='Tab')return;
-    const focusables=[...panel.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),[tabindex]:not([tabindex="-1"])')]
-      .filter(node=>!node.closest('[hidden]'));
+    const focusables=[closeButton,document.getElementById('demo'),
+      document.getElementById('again'),resumeButton]
+      .filter(node=>node&&!node.disabled&&!node.classList.contains('is-hidden'));
     if(!focusables.length){event.preventDefault();panel.focus();return;}
     const [first]=focusables;
     const last=focusables.at(-1);
