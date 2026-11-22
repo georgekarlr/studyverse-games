@@ -57,4 +57,23 @@ flowchart TD
 
 ## Actual implementation / verification
 
-Pending commit and readback.
+**Creator GitHub commit released:** [`4ca9e817ba30ab9270bf071480b4b4c7aa4c86e8`](https://github.com/georgekarlr/studyverse-games/commit/4ca9e817ba30ab9270bf071480b4b4c7aa4c86e8) on existing `stage-1` branch, pushed through a non-forced exact-head CAS from `84f13cf7a807c3ea8b45a76fc5e0a497d25d6f20`. Files changed: four actual author source files, the single existing project source manifest, new scoped test file, this operator report. All original four file hashes and UTF-8 byte sizes matched their own prechange manifest exactly before edits. Nine-source-file project identity and fixed `multiple_choice` type were preserved; source document tree was re-read at the exact source commit.
+
+**Measured postcommit structural checks:** Compared the actual new Game body against the current public player `frame.mjs` initial DOM tag and attribute allowlists using source-level structural matching. **88 HTML elements, 167 attribute occurrences, zero unsupported elements or attributes** in this bounded inspection. `ol` changed to allowlisted `ul`; five `data-drive` attributes replaced by unique IDs with one matching command each; four original `hidden` attrs removed in favor of the same CSS-hidden initial state. The static checks verified the controller no longer uses `dataset.drive`/`[data-drive]`, visible state no longer uses `.hidden=`, and all five pointers/keyboard listener declarations remain in source. Focusable modal options now reference bounded explicit IDs. These checks inspect source structure and exact search patterns; **not** full browser DOM/CSS runtime acceptance.
+
+**New manifest source pins (recomputed UTF-8 bytes):**
+
+| Modified source | New size | New SHA-256 |
+| --- | ---: | --- |
+| index.html | 6,438 bytes | `92880ba1fa3cb8f72a5704147b1135476ddcf85a523fd01ca7c9a37124ce4252` |
+| main.js | 9,822 bytes | `c33f86940fec451533fd5f6780313e59bbb6db797e933b1b69639e6757aa4fd9` |
+| question-dialog.js | 2,542 bytes | `cf3bd5980d21d80e5a4dd7ee6b49e7d0202cf475ddb74fecc6353d0e536590d2` |
+| styles.css | 18,847 bytes | `0262b82b91f6c724372777f2e4773ce39e9543cfef3e89f835a20bff148e5d8d` |
+
+**Regression evidence limit:** Added four targeted Node `node:test` cases for markup allowlists, 5-to-5 pointer-command mapping, initial hidden state/keyboard and modal references, exact source file manifest SHA/size and fixed-type SDK answer privacy. **The test file was committed but Node tests were NOT executed**, nor was Chromium/Playwright launched. The measured checks above were performed directly on read-back source; no claim of executing the actual game or its test suite.
+
+**Production readback after source edit:** Live Supabase confirms `locked=true`, `executable_runtime_ready=false`, `release_signing_enabled=false`, `entitlement_ready=false`, historical `official_grading_ready=false`; **zero** public signing keys, **zero** guest certificates, **zero** committed one-use grants; **two** published metadata-only `multiple_choice` Game showcases unchanged. This private Git source commit **does not trigger Cloudflare Pages or public Worker runtime deployment** and does not create a private saved v3/version; do not claim a new production executable. No Worker/frontend migrations, private package data, signing or browser qualification changed.
+
+**Remaining acceptance gates (next owner-approved sessions):** create a genuine *new* owner-owned immutable private saved compiled Game version from this Git source; complete independent HTML parser/CSS-v2 and JS module/DOM qualification; drive the actual Game in an isolated local browser through keyboard/pointer Move → Park → normalized `submitAnswer` → Exit with Study Standard checking and fallback; verify exact saved package receipt+digest, standalone no-secret public engine, revocable signed styled-v2 release, one-use committed grant and real installed-learner version rights. The current deployed QuickJS public player only supports a restricted click/text interpreter and **cannot** run this entire Game today. Do not silently replace or weaken the player to make an unqualified launch appear successful. No new public access, buttons or production UI/manual changes.
+
+**Rollback:** Restore the four original Game files + verified prior source manifest from starting commit `84f13cf7a807c3ea8b45a76fc5e0a497d25d6f20` under fresh expected-head CAS (and remove the new regression if desired). Existing saved v2 and global public locks stay untouched; no database/production Worker rollback is required.
