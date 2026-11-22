@@ -29,4 +29,4 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run actual authored source and module regressions
         working-directory: studyverse-games/4c84c21e-b797-4754-8d49-5134538dd468
-        run: node --test tests/module-contract.test.mjs tests/markup-profile.test.mjs tests/parking-browser.test.mjs
+        run: node --test tests/module-contract.test.mjs tests/markup-profile.test.mjs tests/in-memory-source-loader.test.mjs tests/parking-browser.test.mjs
