@@ -56,4 +56,23 @@ Adapt the **existing dark-blue Car Parking UI**, not a new design. No new produc
 
 ## Executed acceptance and deployment evidence
 
-Pending Git commit and private GitHub Actions readback. Never infer an Actions success from a commit or queue.
+**Exact creator private repository commit:** [`9567acd14e598196ac7a70e45e95fa6284fae965`](https://github.com/georgekarlr/studyverse-games/commit/9567acd14e598196ac7a70e45e95fa6284fae965), nonforce `stage-1` expected-head CAS from `240160ce4b4324b2b0791d46d1b430152d778aaf`. Files: new actual-game source Playwright browser suite (3 cases), new no-secret private Github Actions workflow, this plan. **No** underlying nine creator Game source files, source manifest, immutable saved v2 package or receipt changed. New worker/frontend source, SQL, signing, keys and user-facing Study UI also unchanged.
+
+**Actual CI trigger:** Private GitHub Actions received a push workflow run for the **exact source commit** (run [`45050324960`](https://github.com/georgekarlr/studyverse-games/actions/runs/45050324960), event `push`, branch `stage-1`, workflow `Private authored Car Parking browser rehearsal`). Provider reports `status=completed`, `conclusion=failure`, `run_started_at=2026-11-22T17:35:40Z`, `updated_at=2026-11-22T17:35:43Z`. Job `137293784419`, `creator-source-chromium`, was marked failed from 17:35:40–17:35:42 UTC with **zero executed job steps** (`fetch_workflow_job_steps=[]`). GitHub job log retrieval failed with provider BlobNotFound HTTP 404. **Cause is not proved; do not label it a browser test failure, passing test, or billing problem without provider evidence.** None of the 3 Playwright cases or prior Node unit/markup cases executed in this run; Chromium was **not** launched and no actual movement/parking/Exit browser observation exists. This release contains a working *test harness design and source*, not independent runtime qualification.
+
+**Production Supabase read-only exact state:** current public release lockdown has `locked=true`, `executable_runtime_ready=false`, `release_signing_enabled=false`, `entitlement_ready=false`, historical `official_grading_ready=false`. Counts remain **0 public release signing keys, 0 signed guest certificates, 0 one-use grants, 2 published metadata-only Game showcases, 3 existing verified private saved packages**. No new owner-private package/Wasabi upload, approved CSS/reviewer source readback, signed public release, installed Study renderer or Game grading was created. The current public QuickJS frame still lacks the authored JS module, pointer, keyboard and RAF support; future real-source Chromium pass alone cannot unlock the isolated player.
+
+**Owner-local permitted execution for a checkout of the private repository** (use no real account keys or private Study Item answers):
+
+```bash
+npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1
+npx playwright install chromium
+cd studyverse-games/4c84c21e-b797-4754-8d49-5134538dd468
+node --test tests/module-contract.test.mjs tests/markup-profile.test.mjs tests/parking-browser.test.mjs
+```
+
+The loopback server allowlists the actual nine files and stops at completion. The synthetic Module SDK always reports `preview_only`, never actual correctness. No test result should be claimed until a genuine successful run and its output is inspected. GitHub Actions workflow can also be triggered manually after its runner/job infrastructure issue is corrected.
+
+**Before → after measured outcome:** before, no real authored browser test in the private source repo; after, a reproducible private local static-server/Chromium script exists and GitHub Actions is set up and demonstrated a *trigger only*, but provider **could not run its job**. The owner's visible Game is unchanged and remains unavailable for public code Play.
+
+**Rollback:** Revert source commit `9567acd14e598196ac7a70e45e95fa6284fae965` (new test and workflow) and this evidence-only report through fresh exact-head CAS if desired. No current Game source or immutable saved v2 manifest, database, frontend/Worker, release lock, private package or user manual rollback is required. Never infer an Actions success from a commit or queue.
