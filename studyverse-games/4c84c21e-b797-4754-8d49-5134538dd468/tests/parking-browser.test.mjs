@@ -1,6 +1,7 @@
 /**
  * PRIVATE local Chromium rehearsal of the ACTUAL authored nine-file Game.
- * This serves a checked-out Git source tree on ephemeral loopback only.
+ * It checks out real source for manifest-pinned memory delivery by default,
+ * or ephemeral loopback HTTP with SV_PARKING_BROWSER_DELIVERY=loopback.
  *
  * It does not verify a compiled/saved receipt, isolated public QuickJS runtime,
  * current browser-rights/host integration, answer correctness or public Play.
@@ -11,6 +12,8 @@ import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {chromium} from 'playwright';
+import {verifiedInMemorySourceBundle,importVerifiedAuthorModules}
+ from './in-memory-source-loader.mjs';
 
 const source=new URL('../source/',import.meta.url);
 const allowed=new Set([
@@ -45,54 +48,71 @@ async function localSourceServer(){
  return {server,origin:'http://127.0.0.1:'+server.address().port};
 }
 
+/** Same learner-safe fixture in both native HTTP and in-memory delivery modes. */
+function installSyntheticModuleSdk({id,count,itemType}){
+ window.__sdkCalls=[];
+ // Deterministic traffic is still animated and uses the real source physics.
+ Math.random=()=>0.37;
+ const item={
+  id,item_type:itemType,schema_version:1,
+  content:{question:'Which traffic signal means stop?',
+   options:Array.from({length:count},(_,i)=>({
+    id:'choice-'+i,text:i===1?'Red light':'Choice '+(i+1)
+   }))}
+ };
+ window.GameSDK=Object.freeze({module:Object.freeze({
+  getItem:async()=>{
+   window.__sdkCalls.push({method:'getItem'});
+   return structuredClone(item);
+  },
+  submitAnswer:async request=>{
+   window.__sdkCalls.push({method:'submitAnswer',request});
+   return {status:'preview_only'};
+  },
+  exitToStandard:async()=>{
+   window.__sdkCalls.push({method:'exitToStandard'});
+  }
+ })});
+}
+
 async function openGame(t,{count=2,itemType='multiple_choice',viewport={width:1280,height:850}}={}){
- const {server,origin}=await localSourceServer();
+ const delivery=process.env.SV_PARKING_BROWSER_DELIVERY||'memory';
+ if(!['memory','loopback'].includes(delivery))throw Error('unsupported_browser_delivery');
+ const host=delivery==='loopback'?await localSourceServer():null;
  let browser;
  t.after(async()=>{
   try{await browser?.close();}finally{
-   await new Promise(resolve=>server.close(resolve));
+   if(host)await new Promise(resolve=>host.server.close(resolve));
   }
  });
- browser=await chromium.launch({headless:true});
+ browser=await chromium.launch({headless:true,
+  ...(process.env.SV_LOCAL_CHROMIUM_EXECUTABLE?
+   {executablePath:process.env.SV_LOCAL_CHROMIUM_EXECUTABLE}:{})});
  const context=await browser.newContext({viewport,acceptDownloads:false});
  const page=await context.newPage();
  const external=[];
  const errors=[];
  page.on('pageerror',error=>errors.push(String(error.message).slice(0,160)));
- // The authored game is private. Block any non-local request rather than
- // fetching any hypothetical external dependency from a CI runner.
+ // Memory mode denies all HTTP. Loopback mode allows ONLY its own ephemeral host.
  await page.route('**/*',route=>{
-  if(new URL(route.request().url()).origin!==origin){
+  if(!host||new URL(route.request().url()).origin!==host.origin){
    external.push('blocked');return route.abort();
   }
   return route.continue();
  });
- await page.addInitScript(({id,count,itemType})=>{
-  window.__sdkCalls=[];
-  // Deterministic traffic is still animated and uses the real source physics.
-  Math.random=()=>0.37;
-  const item={
-   id,item_type:itemType,schema_version:1,
-   content:{question:'Which traffic signal means stop?',
-    options:Array.from({length:count},(_,i)=>({
-     id:'choice-'+i,text:i===1?'Red light':'Choice '+(i+1)
-    }))}
-  };
-  window.GameSDK=Object.freeze({module:Object.freeze({
-   getItem:async()=>{
-    window.__sdkCalls.push({method:'getItem'});
-    return structuredClone(item);
-   },
-   submitAnswer:async request=>{
-    window.__sdkCalls.push({method:'submitAnswer',request});
-    return {status:'preview_only'};
-   },
-   exitToStandard:async()=>{
-    window.__sdkCalls.push({method:'exitToStandard'});
-   }
-  })});
- },{id:ITEM_ID,count,itemType});
- await page.goto(origin+'/',{waitUntil:'load'});
+ const fixture={id:ITEM_ID,count,itemType};
+ if(delivery==='memory'){
+  // Exact nine Git files must match their owner source manifest first.
+  // JS is never fetched or evaluated through HTTP; the browser's real native
+  // ESM loader imports the original modules through local blob URLs.
+  const bundle=await verifiedInMemorySourceBundle();
+  await page.setContent(bundle.document,{waitUntil:'load'});
+  await page.evaluate(installSyntheticModuleSdk,fixture);
+  await importVerifiedAuthorModules(page,bundle.modules);
+ }else{
+  await page.addInitScript(installSyntheticModuleSdk,fixture);
+  await page.goto(host.origin+'/',{waitUntil:'load'});
+ }
  return {page,errors,external};
 }
 
