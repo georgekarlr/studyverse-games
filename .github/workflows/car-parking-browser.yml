@@ -1,0 +1,32 @@
+name: Private authored Car Parking browser rehearsal
+
+on:
+  push:
+    branches: [stage-1]
+    paths:
+      - '.github/workflows/car-parking-browser.yml'
+      - 'studyverse-games/4c84c21e-b797-4754-8d49-5134538dd468/source/**'
+      - 'studyverse-games/4c84c21e-b797-4754-8d49-5134538dd468/tests/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  creator-source-chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout pinned private creator source
+        uses: actions/checkout@v4
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned local-only Playwright dependency
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1
+      - name: Install isolated Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run actual authored source and module regressions
+        working-directory: studyverse-games/4c84c21e-b797-4754-8d49-5134538dd468
+        run: node --test tests/module-contract.test.mjs tests/markup-profile.test.mjs tests/parking-browser.test.mjs
