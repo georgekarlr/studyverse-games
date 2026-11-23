@@ -70,3 +70,13 @@ test('source manifest pins exact edited bytes; fixed type and Student answer pri
  assert.match(session,/submitAnswer\(\{item_id:item\.id,response:\{value:optionId\}\}\)/);
  assert.doesNotMatch(session,/checkAnswer|getAnswerKey|correct_choice_id/);
 });
+
+
+test('Space brake works in the isolated virtual Element without browser constructors',async()=>{
+ const main=await read('main.js');
+ assert.doesNotMatch(main,/instanceof\s+HTMLButtonElement/);
+ assert.match(main,/key===' '\s*&&\s*String\(target\?\.tagName\?\?''\)\.toUpperCase\(\)==='BUTTON'/);
+ // Native focused buttons still keep Space activation; other focused Game
+ // targets can brake under the same physical input, including QuickJS.
+ assert.match(main,/if\(command\s*&&\s*!\(key===' '\s*&&/);
+});

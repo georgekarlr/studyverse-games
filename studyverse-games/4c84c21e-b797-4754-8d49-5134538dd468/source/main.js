@@ -190,7 +190,7 @@ window.addEventListener('keydown',event=>{
   if(key==='i'&&!event.repeat){event.preventDefault();dialog.open();return;}
   if(!item||finished||busy)return;
   const command=keyMap.get(key);
-  if(command && !(key===' '&&target instanceof HTMLButtonElement)){
+  if(command && !(key===' '&&String(target?.tagName??'').toUpperCase()==='BUTTON')){
     event.preventDefault();driveKeys.add(key);syncControls();
   }else if(key==='p'&&!event.repeat){event.preventDefault();void park();}
   else if(key==='r'&&!event.repeat){event.preventDefault();releaseAll();lot.reset();announce('Car reset to the starting lane.');}
