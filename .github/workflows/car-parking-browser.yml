@@ -23,10 +23,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install pinned local-only Playwright dependency
-        run: npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1
+      - name: Install pinned local-only Playwright and CSS AST parser
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1 css-tree@3.1.0
       - name: Install isolated Chromium
         run: npx playwright install --with-deps chromium
       - name: Run actual authored source and module regressions
         working-directory: studyverse-games/4c84c21e-b797-4754-8d49-5134538dd468
-        run: node --test tests/module-contract.test.mjs tests/markup-profile.test.mjs tests/in-memory-source-loader.test.mjs tests/parking-browser.test.mjs
+        run: node --test tests/module-contract.test.mjs tests/markup-profile.test.mjs tests/in-memory-source-loader.test.mjs tests/private-css-v2-bounds.test.mjs tests/private-css-source-parse.test.mjs tests/parking-browser.test.mjs
