@@ -8,13 +8,13 @@
 </head>
 <body>
 <main class="game" id="game-screen" aria-label="Maze Quest">
- <section class="field" aria-label="Maze playfield">
+ <section class="field" id="maze-field" aria-label="Maze playfield">
   <div class="board" id="board" aria-label="Maze board"></div>
  </section>
  <header class="hud">
   <div class="brand"><h1>MAZE QUEST</h1><small id="progress">Preparing maze</small></div>
   <div class="menu">
-   <button id="info" class="glass" type="button" disabled>Question</button>
+   <button id="info" class="glass" type="button" aria-label="Read question and answers" disabled>?</button>
    <button id="map" class="glass" type="button" disabled>Map</button>
    <button id="exit" class="glass" type="button" aria-label="Exit to Standard" disabled>X</button>
   </div>
@@ -31,11 +31,11 @@
   </div>
   <div class="gate-actions" aria-label="Gate actions">
    <button id="confirm" class="enter" type="button" disabled>Enter gate</button>
-   <button id="wait" class="glass" type="button">Wait</button>
-   <button id="reset" class="glass" type="button">Restart</button>
+   <div class="action-row"><button id="wait" class="glass" type="button">Wait</button>
+   <button id="reset" class="glass" type="button" aria-label="Return to start">Reset</button></div>
   </div>
  </section>
- <section id="question-modal" class="modal" role="dialog" aria-label="Question and answer gates" hidden>
+ <section id="question-modal" class="modal" role="dialog" aria-modal="true" aria-label="Question and answer gates" hidden>
   <div class="modal-head"><h2>Question &amp; gates</h2><button id="close-question" class="glass" type="button" aria-label="Return to maze">X</button></div>
   <p class="question" id="question"></p>
   <p id="page-info"></p>
@@ -44,10 +44,10 @@
    <button id="previous" class="glass" type="button">Previous</button>
    <button id="next" class="glass" type="button">Next</button>
   </div>
-  <p class="help">Tap or hold the floating arrows, or use WASD. Orange sentries advance every two turns; Wait advances a turn. Contact returns you to START. Use Map to see explored paths. Match a numbered gate to your answer and press Enter gate to submit.</p>
+  <p class="help">The four gates are at the maze corners: northwest, northeast, southwest and southeast. Tap or hold a direction, or use WASD. Orange sentries move every two turns; Wait advances a turn. Contact returns you to START. Use Map to explore. Reach your chosen gate and press Enter gate to submit.</p>
   <button id="resume" class="enter" type="button">Back to maze</button>
  </section>
- <section id="map-modal" class="modal" role="dialog" aria-label="Explored maze map" hidden>
+ <section id="map-modal" class="modal" role="dialog" aria-modal="true" aria-label="Explored maze map" hidden>
   <div class="modal-head"><h2>Explored maze</h2><button id="close-map" class="glass" type="button" aria-label="Return to maze">X</button></div>
   <p class="help">P player | S start | 1-30 gates | # wall | . path | + trail | o sentry | ? unexplored</p>
   <pre id="map-view" class="map-view" aria-label="Explored maze grid"></pre>

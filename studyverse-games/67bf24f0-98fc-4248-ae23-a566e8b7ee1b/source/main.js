@@ -40,9 +40,10 @@ function buildWorld(seed){
  }
  return {size,grid,start,gates,patrols};
 }
-const pageSize=4,cameraSize=11,half=5;
+const pageSize=4,cameraSize=9,half=4;
+const compass=["NW","NE","SW","SE"];
 const get=id=>document.querySelector('#'+id);
-const ui={board:get('board'),options:get('options'),question:get('question'),progress:get('progress'),status:get('status'),play:get('play-area'),page:get('page-info'),modal:get('question-modal'),info:get('info'),close:get('close-question'),resume:get('resume'),confirm:get('confirm'),previous:get('previous'),next:get('next'),reset:get('reset'),exit:get('exit'),map:get('map'),mapModal:get('map-modal'),mapView:get('map-view'),mapClose:get('close-map'),mapResume:get('map-resume'),newMaze:get('new-maze'),wait:get('wait')};
+const ui={field:get('maze-field'),board:get('board'),options:get('options'),question:get('question'),progress:get('progress'),status:get('status'),play:get('play-area'),page:get('page-info'),modal:get('question-modal'),info:get('info'),close:get('close-question'),resume:get('resume'),confirm:get('confirm'),previous:get('previous'),next:get('next'),reset:get('reset'),exit:get('exit'),map:get('map'),mapModal:get('map-modal'),mapView:get('map-view'),mapClose:get('close-map'),mapResume:get('map-resume'),newMaze:get('new-maze'),wait:get('wait')};
 const directions=[
  {button:get('up'),dx:0,dy:-1,keys:['arrowup','w']},
  {button:get('down'),dx:0,dy:1,keys:['arrowdown','s']},
@@ -69,11 +70,25 @@ function makeBoard(){
   const row=document.createElement('div');row.className='maze-row';
   for(let x=0;x<cameraSize;x++){
    const el=document.createElement('span');el.className='tile';el.setAttribute('aria-hidden','true');
-   tiles.push({x,y,el});row.append(el);
+   const mark=document.createElement('span');mark.className='mark';el.append(mark);
+   tiles.push({x,y,el,mark});row.append(el);
   }
   ui.board.append(row);
  }
  for(let i=0;i<pageSize;i++){const el=document.createElement('p');el.className='option';optionRows.push(el);ui.options.append(el);}
+}
+// Fit a square camera within the actual available field. The isolated guest
+// exposes only bounded local element dimensions; never read parent layout.
+let boardSide=0;
+function fitBoard(){
+ const side=Math.floor(Math.min(ui.field.clientWidth,ui.field.clientHeight,640));
+ if(!Number.isFinite(side)||side<1||side===boardSide)return;
+ boardSide=side;ui.board.style.width=side+'px';ui.board.style.height=side+'px';
+}
+function watchField(){
+ fitBoard();
+ if(typeof ResizeObserver==='function'){const observer=new ResizeObserver(fitBoard);observer.observe(ui.field);}
+ else window.addEventListener('resize',fitBoard);
 }
 function patrolAt(x,y){return world.patrols.some(p=>p.cells[p.index].x===x&&p.cells[p.index].y===y);}
 function reveal(){
@@ -94,11 +109,11 @@ function tileView(x,y){
  return [(x+y)%2===0?'path':'floor',''];
 }
 function paintMaze(){
- for(const tile of tiles){const [name,label]=tileView(position.x+tile.x-half,position.y+tile.y-half);updateClass(tile.el,'tile '+name);updateText(tile.el,label);}
+ for(const tile of tiles){const [name,label]=tileView(position.x+tile.x-half,position.y+tile.y-half);updateClass(tile.el,'tile '+name);updateText(tile.mark,label);}
 }
 function paintOptions(){
  const active=activeOptions();
- for(let i=0;i<optionRows.length;i++){const row=optionRows[i],option=active[i];row.hidden=!option;updateClass(row,option&&option===currentOption()?'option selected':'option');updateText(row,option?gateNumber(i)+'. '+option.text:'');}
+ for(let i=0;i<optionRows.length;i++){const row=optionRows[i],option=active[i];row.hidden=!option;updateClass(row,option&&option===currentOption()?'option selected':'option');updateText(row,option?gateNumber(i)+' ['+compass[i]+'] '+option.text:'');}
  updateText(ui.page,'Gates '+(page*pageSize+1)+'-'+(page*pageSize+active.length)+' of '+options.length);
  setDisabled(ui.previous,phase!=='playing'||overlay!=='question'||page===0);
  setDisabled(ui.next,phase!=='playing'||overlay!=='question'||(page+1)*pageSize>=options.length);
@@ -144,11 +159,12 @@ function advancePatrols(){turns++;if(turns%2===0)for(const p of world.patrols)p.
 function move(dx,dy){
  if(!canMove())return;
  const x=position.x+dx,y=position.y+dy;
- if(!available(x,y)){announce('Wall ahead. Choose another direction.');return;}
+ if(!available(x,y)){stopHold();announce('Wall ahead. Choose another direction.');return;}
  if(patrolAt(x,y)){resetPlayer('Sentry contact! Back to START.');return;}
  position={x,y};moves++;reveal();
  if(advancePatrols()){resetPlayer('Sentry contact! Back to START.');return;}
- draw();announce(currentOption()?'Gate '+gateNumber(atGate(x,y))+' ready. Enter or continue.':'Row '+(y+1)+', column '+(x+1)+'. Watch the sentries.');
+ if(currentOption())stopHold();
+ draw();announce(currentOption()?'Gate '+gateNumber(atGate(x,y))+' ready. Enter or read ? for the choice.':'Row '+(y+1)+', column '+(x+1)+'. Watch the sentries.');
 }
 function waitTurn(){
  if(!canMove())return;
@@ -173,7 +189,7 @@ function closeOverlay(){
 function newMaze(){if(phase==='playing'&&overlay==='map'){nextWorld();closeOverlay();}}
 function scheduleHold(){
  // Keep below the private guest lifetime limit. Ordinary taps remain available.
- if(!held||!canMove()||frameCount>=3200||typeof window.requestAnimationFrame!=='function')return;
+ if(!held||!canMove()||frameCount>=1200||typeof window.requestAnimationFrame!=='function')return;
  frameCount++;frame=window.requestAnimationFrame(holdFrame);
 }
 function holdFrame(stamp){
@@ -186,9 +202,12 @@ function startHold(d,event){
  if(!canMove())return;
  stopHold();d.skipClick=false;
  if(!Number.isSafeInteger(event.pointerId)||event.pointerId<0)return;
- held={direction:d,pointerId:event.pointerId,last:null};updateClass(d.button,'direction held');
+ // The trusted mirror can replace the native button during pointerdown.
+ // Move on the real pointer event itself; do not depend on a later click.
+ d.skipClick=true;held={direction:d,pointerId:event.pointerId,last:null};
+ updateClass(d.button,'direction held');
  try{d.button.setPointerCapture(event.pointerId);}catch{}
- scheduleHold();
+ move(d.dx,d.dy);if(held)scheduleHold();
 }
 function releaseHold(event){if(held&&event.pointerId===held.pointerId)stopHold();}
 function bindDirection(d){
@@ -249,7 +268,7 @@ async function init(){
  try{
   item=normalizeItem(await sdk.getItem());ui.exit.disabled=false;
   if(!item){phase='unavailable';announce('Incompatible Study Item. Exit to Standard.');return;}
-  options=item.options;ui.question.textContent=item.question;makeBoard();phase='playing';ui.play.hidden=false;nextWorld();openOverlay('question');
+  options=item.options;ui.question.textContent=item.question;makeBoard();watchField();phase='playing';ui.play.hidden=false;nextWorld();openOverlay('question');
  }catch{phase='unavailable';ui.exit.disabled=false;announce('Could not load the Study Item. Exit to Standard.');}
 }
 void init();
