@@ -40,10 +40,11 @@ function buildWorld(seed){
  }
  return {size,grid,start,gates,patrols};
 }
-const pageSize=4,cameraSize=9,half=4;
+const pageSize=4;
+let cameraCols=9,cameraRows=9;
 const compass=["NW","NE","SW","SE"];
 const get=id=>document.querySelector('#'+id);
-const ui={field:get('maze-field'),board:get('board'),options:get('options'),question:get('question'),progress:get('progress'),status:get('status'),play:get('play-area'),page:get('page-info'),modal:get('question-modal'),info:get('info'),close:get('close-question'),resume:get('resume'),confirm:get('confirm'),previous:get('previous'),next:get('next'),reset:get('reset'),exit:get('exit'),map:get('map'),mapModal:get('map-modal'),mapView:get('map-view'),mapClose:get('close-map'),mapResume:get('map-resume'),newMaze:get('new-maze'),wait:get('wait')};
+const ui={game:get('game-screen'),probe:get('viewport-probe'),field:get('maze-field'),board:get('board'),options:get('options'),question:get('question'),progress:get('progress'),status:get('status'),play:get('play-area'),page:get('page-info'),modal:get('question-modal'),info:get('info'),close:get('close-question'),resume:get('resume'),confirm:get('confirm'),previous:get('previous'),next:get('next'),reset:get('reset'),exit:get('exit'),map:get('map'),mapModal:get('map-modal'),mapView:get('map-view'),mapClose:get('close-map'),mapResume:get('map-resume'),newMaze:get('new-maze'),wait:get('wait')};
 const directions=[
  {button:get('up'),dx:0,dy:-1,keys:['arrowup','w']},
  {button:get('down'),dx:0,dy:1,keys:['arrowdown','s']},
@@ -65,34 +66,67 @@ function announce(message){if(ui.status.textContent!==message)ui.status.textCont
 function updateText(el,value){if(el.textContent!==value)el.textContent=value;}
 function updateClass(el,value){if(el.className!==value)el.className=value;}
 function setDisabled(el,value){if(el.disabled!==value)el.disabled=value;}
-function makeBoard(){
- for(let y=0;y<cameraSize;y++){
+function makeBoard(cols,rows){
+ cameraCols=cols;cameraRows=rows;tiles.length=0;ui.board.replaceChildren();
+ for(let y=0;y<rows;y++){
   const row=document.createElement('div');row.className='maze-row';
-  for(let x=0;x<cameraSize;x++){
+  row.style.height=(100/rows).toFixed(2)+'%';
+  for(let x=0;x<cols;x++){
    const el=document.createElement('span');el.className='tile';el.setAttribute('aria-hidden','true');
+   el.style.width=(100/cols).toFixed(2)+'%';
    const mark=document.createElement('span');mark.className='mark';el.append(mark);
    tiles.push({x,y,el,mark});row.append(el);
   }
   ui.board.append(row);
  }
+}
+function makeOptions(){
  for(let i=0;i<pageSize;i++){const el=document.createElement('p');el.className='option';optionRows.push(el);ui.options.append(el);}
 }
-// Fit a square camera within the actual available field. The isolated guest
-// exposes only bounded local element dimensions; never read parent layout.
-let boardSide=0;
+// The invisible probe measures only our own authored 100vh element.
+// Native local preview has no trusted chrome; the scoped isolated player does.
+// Never inspect or manipulate the host or parent document.
+let nativeFull=null,gameHeight=0,boardWidth=0,boardHeight=0;
+function cameraShape(ratio){
+ if(ratio<0.60)return [7,13];
+ if(ratio<0.82)return [7,11];
+ if(ratio<1.22)return [9,9];
+ if(ratio<1.60)return [11,7];
+ if(ratio<2.50)return [13,7];
+ return [13,5];
+}
 function fitBoard(){
- const side=Math.floor(Math.min(ui.field.clientWidth,ui.field.clientHeight,640));
- if(!Number.isFinite(side)||side<1||side===boardSide)return;
- boardSide=side;ui.board.style.width=side+'px';ui.board.style.height=side+'px';
+ const w=ui.field.clientWidth,viewport=ui.probe.clientHeight;
+ let h=ui.field.clientHeight;
+ if(w>0&&viewport>0&&ui.game.clientHeight>0){
+  if(nativeFull===null)nativeFull=ui.game.clientHeight>=viewport*0.95;
+  const desired=Math.max(100,viewport-(nativeFull?0:w<=320?90:70));
+  if(gameHeight!==desired){gameHeight=desired;ui.game.style.height=desired+'px';}
+  h=Math.max(1,desired-66);
+ }
+ const [cols,rows]=w>0&&h>0?cameraShape(w/h):[9,9];
+ const changed=!tiles.length||cameraCols!==cols||cameraRows!==rows;
+ if(changed)makeBoard(cols,rows);
+ if(w>0&&h>0){
+  const cell=Math.max(1,Math.floor(Math.min(w/cols,h/rows,100)));
+  const width=cell*cols,height=cell*rows;
+  if(width!==boardWidth||height!==boardHeight){
+   boardWidth=width;boardHeight=height;
+   ui.board.style.width=width+'px';ui.board.style.height=height+'px';
+  }
+ }
+ if(world&&changed){reveal();paintMaze();}
 }
 function watchField(){
  fitBoard();
- if(typeof ResizeObserver==='function'){const observer=new ResizeObserver(fitBoard);observer.observe(ui.field);}
- else window.addEventListener('resize',fitBoard);
+ if(typeof ResizeObserver==='function'){
+  const observer=new ResizeObserver(fitBoard);observer.observe(ui.field);observer.observe(ui.probe);
+ }else window.addEventListener('resize',fitBoard);
 }
 function patrolAt(x,y){return world.patrols.some(p=>p.cells[p.index].x===x&&p.cells[p.index].y===y);}
 function reveal(){
- for(let y=position.y-half;y<=position.y+half;y++)for(let x=position.x-half;x<=position.x+half;x++)
+ const hx=Math.floor(cameraCols/2),hy=Math.floor(cameraRows/2);
+ for(let y=position.y-hy;y<=position.y+hy;y++)for(let x=position.x-hx;x<=position.x+hx;x++)
   if(x>=0&&y>=0&&x<world.size&&y<world.size)explored.add(keyOf(x,y));
  visited.add(keyOf(position.x,position.y));
 }
@@ -109,7 +143,8 @@ function tileView(x,y){
  return [(x+y)%2===0?'path':'floor',''];
 }
 function paintMaze(){
- for(const tile of tiles){const [name,label]=tileView(position.x+tile.x-half,position.y+tile.y-half);updateClass(tile.el,'tile '+name);updateText(tile.mark,label);}
+ const hx=Math.floor(cameraCols/2),hy=Math.floor(cameraRows/2);
+ for(const tile of tiles){const [name,label]=tileView(position.x+tile.x-hx,position.y+tile.y-hy);updateClass(tile.el,'tile '+name);updateText(tile.mark,label);}
 }
 function paintOptions(){
  const active=activeOptions();
@@ -268,7 +303,7 @@ async function init(){
  try{
   item=normalizeItem(await sdk.getItem());ui.exit.disabled=false;
   if(!item){phase='unavailable';announce('Incompatible Study Item. Exit to Standard.');return;}
-  options=item.options;ui.question.textContent=item.question;makeBoard();watchField();phase='playing';ui.play.hidden=false;nextWorld();openOverlay('question');
+  options=item.options;ui.question.textContent=item.question;makeOptions();phase='playing';ui.play.hidden=false;nextWorld();watchField();openOverlay('question');
  }catch{phase='unavailable';ui.exit.disabled=false;announce('Could not load the Study Item. Exit to Standard.');}
 }
 void init();
