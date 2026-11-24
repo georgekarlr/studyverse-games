@@ -44,7 +44,7 @@ const pageSize=4;
 let cameraCols=9,cameraRows=9;
 const compass=["NW","NE","SW","SE"];
 const get=id=>document.querySelector('#'+id);
-const ui={game:get('game-screen'),probe:get('viewport-probe'),field:get('maze-field'),board:get('board'),options:get('options'),question:get('question'),progress:get('progress'),status:get('status'),play:get('play-area'),page:get('page-info'),modal:get('question-modal'),info:get('info'),close:get('close-question'),resume:get('resume'),confirm:get('confirm'),previous:get('previous'),next:get('next'),reset:get('reset'),exit:get('exit'),map:get('map'),mapModal:get('map-modal'),mapView:get('map-view'),mapClose:get('close-map'),mapResume:get('map-resume'),newMaze:get('new-maze'),wait:get('wait')};
+const ui={game:get('game-screen'),probe:get('viewport-probe'),field:get('maze-field'),board:get('board'),hero:get('hero'),options:get('options'),question:get('question'),progress:get('progress'),status:get('status'),play:get('play-area'),page:get('page-info'),modal:get('question-modal'),info:get('info'),close:get('close-question'),resume:get('resume'),confirm:get('confirm'),previous:get('previous'),next:get('next'),reset:get('reset'),exit:get('exit'),map:get('map'),mapModal:get('map-modal'),mapView:get('map-view'),mapClose:get('close-map'),mapResume:get('map-resume'),newMaze:get('new-maze'),wait:get('wait')};
 const directions=[
  {button:get('up'),dx:0,dy:-1,keys:['arrowup','w']},
  {button:get('down'),dx:0,dy:1,keys:['arrowdown','s']},
@@ -87,7 +87,7 @@ function bearing(gate){
 }
 function shortChoice(text){return text.length>32?text.slice(0,29)+'...':text;}
 function navigationMessage(){
- const choice=currentOption();if(choice)return 'Gate '+gateNumber(atGate(position.x,position.y))+': '+shortChoice(choice.text);
+ const choice=currentOption();if(choice)return 'Portal '+gateNumber(atGate(position.x,position.y))+': '+shortChoice(choice.text);
  const gate=targetGate();if(!gate)return 'Choose a target in Q&A, or explore freely.';
  const n=targetDistances.get(keyOf(position.x,position.y));
  return 'Target '+gateNumber(targetIndex())+' '+bearing(gate)+(n===undefined?' | Check map':' | '+n+' steps');
@@ -116,6 +116,13 @@ function makeBoard(cols,rows){
   }
   ui.board.append(row);
  }
+ // Independent reusable character sprite; keep terrain underneath it.
+ ui.board.append(ui.hero);
+ const hx=Math.floor(cols/2),hy=Math.floor(rows/2);
+ ui.hero.style.left=((hx+0.08)*100/cols).toFixed(2)+'%';
+ ui.hero.style.top=((hy+0.06)*100/rows).toFixed(2)+'%';
+ ui.hero.style.width=(84/cols).toFixed(2)+'%';
+ ui.hero.style.height=(88/rows).toFixed(2)+'%';
 }
 function makeOptions(){
  for(let i=0;i<pageSize;i++){const el=document.createElement('button');el.className='option';el.setAttribute('type','button');el.addEventListener('click',()=>trackOption(i));optionRows.push(el);ui.options.append(el);}
@@ -125,11 +132,10 @@ function makeOptions(){
 // Never inspect or manipulate the host or parent document.
 let nativeFull=null,gameHeight=0,boardWidth=0,boardHeight=0;
 function cameraShape(ratio){
- if(ratio<0.60)return [7,13];
+ if(ratio<0.47)return [5,13];
  if(ratio<0.82)return [7,11];
  if(ratio<1.22)return [9,9];
- if(ratio<1.60)return [11,7];
- if(ratio<2.50)return [13,7];
+ if(ratio<2.25)return [11,7];
  return [13,5];
 }
 function fitBoard(){
@@ -167,12 +173,12 @@ function reveal(){
   if(x>=0&&y>=0&&x<world.size&&y<world.size)explored.add(keyOf(x,y));
  visited.add(keyOf(position.x,position.y));
 }
-function tileView(x,y){
+function tileView(x,y,includePlayer=true){
  const kind=world.grid[y]?.[x],k=keyOf(x,y);
  if(!kind)return ['void',''];
- if(x===position.x&&y===position.y)return ['player','P'];
- if(kind==='#')return [(x+y)%2===0?'wall':'stone',''];
- if(patrolAt(x,y))return ['sentry','o'];
+ if(includePlayer&&x===position.x&&y===position.y)return ['player','P'];
+ if(kind==='#')return [world.grid[y+1]?.[x]==='#'?'stone':'wall',''];
+ if(patrolAt(x,y))return ['sentry',includePlayer?'o':'!'];
  const index=atGate(x,y);
  if(index>=0&&index<activeOptions().length)return [index===targetIndex()?'target':'gate',String(gateNumber(index))];
  if(kind==='S')return ['start','S'];
@@ -181,7 +187,7 @@ function tileView(x,y){
 }
 function paintMaze(){
  const hx=Math.floor(cameraCols/2),hy=Math.floor(cameraRows/2);
- for(const tile of tiles){const [name,label]=tileView(position.x+tile.x-hx,position.y+tile.y-hy);updateClass(tile.el,'tile '+name);updateText(tile.mark,label);}
+ for(const tile of tiles){const [name,label]=tileView(position.x+tile.x-hx,position.y+tile.y-hy,false);updateClass(tile.el,'tile '+name);updateText(tile.mark,label);}
 }
 function paintOptions(){
  const active=activeOptions();

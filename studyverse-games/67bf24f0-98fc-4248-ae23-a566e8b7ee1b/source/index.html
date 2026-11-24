@@ -10,7 +10,13 @@
 <main class="game" id="game-screen" aria-label="Maze Quest">
  <div id="viewport-probe" class="probe" aria-hidden="true"></div>
  <section class="field" id="maze-field" aria-label="Maze playfield">
-  <div class="board" id="board" aria-label="Maze board"></div>
+  <div class="board" id="board" aria-label="Maze board">
+   <div id="hero" class="hero" aria-hidden="true">
+    <span class="hero-head">&#183;&#183;</span>
+    <span class="hero-body">&#9670;</span>
+    <span class="hero-feet"></span>
+   </div>
+  </div>
  </section>
  <header class="hud">
   <div class="brand"><h1>MAZE QUEST</h1><small id="progress">Preparing maze</small></div>
@@ -45,12 +51,12 @@
    <button id="previous" class="glass" type="button">Previous</button>
    <button id="next" class="glass" type="button">Next</button>
   </div>
-  <p class="help">Tap an answer to track its gate, not to submit. Follow the compass and distance. Orange sentries move every two turns; Wait advances a turn. Contact returns you to START. Use Map to see discovered corridors. Reach a gate and press Enter to submit.</p>
+  <p class="help">Tap an answer to track its gate, not to submit. Follow the compass and distance. Amber sentries move every two turns; Wait advances a turn. Contact returns you to START. Use Map to see discovered corridors. Reach a gate and press Enter to submit.</p>
   <button id="resume" class="enter" type="button">Explore maze</button>
  </section>
  <section id="map-modal" class="modal" role="dialog" aria-modal="true" aria-label="Explored maze map" hidden>
   <div class="modal-head"><h2>Explored maze</h2><button id="close-map" class="glass" type="button" aria-label="Return to maze">X</button></div>
-  <p class="help">P player | S start | numbered gates (known locations) | # wall | . path | + trail | o sentry | ? unexplored</p>
+  <p class="help">P adventurer | S start | numbers = gates | # stone | . floor | + trail | o sentry | ? unexplored</p>
   <pre id="map-view" class="map-view" aria-label="Explored maze grid"></pre>
   <button id="new-maze" class="glass" type="button">Generate new maze</button>
   <button id="map-resume" class="enter" type="button">Back to maze</button>
