@@ -54,12 +54,49 @@ const directions=[
 const tiles=[],optionRows=[];
 let sdk=null,item=null,options=[],world=null,page=0,position=null,moves=0,turns=0;
 let explored=new Set(),visited=new Set(),phase='loading',overlay='';
+let targetId=null,targetDistances=new Map();
 let held=null,frame=null,frameCount=0;
 const keyOf=(x,y)=>x+','+y;
 const activeOptions=()=>options.slice(page*pageSize,(page+1)*pageSize);
 function atGate(x,y){return world.gates.findIndex(g=>g.x===x&&g.y===y);}
 function currentOption(){return activeOptions()[atGate(position.x,position.y)]||null;}
 function gateNumber(i){return page*pageSize+i+1;}
+function targetIndex(){return activeOptions().findIndex(option=>option.id===targetId);}
+function targetGate(){return world.gates[targetIndex()]||null;}
+// Navigation distance only; never read an answer key or judge correctness.
+function distanceField(grid,goal,blocked){
+ const key=(x,y)=>x+','+y,distances=new Map([[key(goal.x,goal.y),0]]),queue=[goal];
+ for(let i=0;i<queue.length;i++){
+  const c=queue[i],distance=distances.get(key(c.x,c.y));
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const x=c.x+dx,y=c.y+dy,k=key(x,y);
+   if(!grid[y]?.[x]||grid[y][x]==='#'||blocked.has(k)||distances.has(k))continue;
+   distances.set(k,distance+1);queue.push({x,y});
+  }
+ }
+ return distances;
+}
+function refreshTarget(){
+ targetDistances=new Map();const gate=targetGate();if(!gate)return;
+ const blocked=new Set();for(const patrol of world.patrols)for(const cell of patrol.cells)blocked.add(keyOf(cell.x,cell.y));
+ targetDistances=distanceField(world.grid,gate,blocked);
+}
+function bearing(gate){
+ const dy=gate.y-position.y,dx=gate.x-position.x;
+ return (dy<0?'N':dy>0?'S':'')+(dx<0?'W':dx>0?'E':'')||'HERE';
+}
+function shortChoice(text){return text.length>32?text.slice(0,29)+'...':text;}
+function navigationMessage(){
+ const choice=currentOption();if(choice)return 'Gate '+gateNumber(atGate(position.x,position.y))+': '+shortChoice(choice.text);
+ const gate=targetGate();if(!gate)return 'Choose a target in Q&A, or explore freely.';
+ const n=targetDistances.get(keyOf(position.x,position.y));
+ return 'Target '+gateNumber(targetIndex())+' '+bearing(gate)+(n===undefined?' | Check map':' | '+n+' safe steps');
+}
+function trackOption(index){
+ if(phase!=='playing'||overlay!=='question')return;
+ const option=activeOptions()[index];if(!option)return;
+ targetId=option.id;refreshTarget();closeOverlay();
+}
 function available(x,y){const c=world.grid[y]?.[x];return !!c&&c!=='#';}
 function canMove(){return phase==='playing'&&!overlay;}
 function announce(message){if(ui.status.textContent!==message)ui.status.textContent=message;}
@@ -81,7 +118,7 @@ function makeBoard(cols,rows){
  }
 }
 function makeOptions(){
- for(let i=0;i<pageSize;i++){const el=document.createElement('p');el.className='option';optionRows.push(el);ui.options.append(el);}
+ for(let i=0;i<pageSize;i++){const el=document.createElement('button');el.className='option';el.setAttribute('type','button');el.addEventListener('click',()=>trackOption(i));optionRows.push(el);ui.options.append(el);}
 }
 // The invisible probe measures only our own authored 100vh element.
 // Native local preview has no trusted chrome; the scoped isolated player does.
@@ -102,7 +139,7 @@ function fitBoard(){
   if(nativeFull===null)nativeFull=ui.game.clientHeight>=viewport*0.95;
   const desired=Math.max(100,viewport-(nativeFull?0:w<=320?90:70));
   if(gameHeight!==desired){gameHeight=desired;ui.game.style.height=desired+'px';}
-  h=Math.max(1,desired-66);
+  h=Math.max(1,desired-112);
  }
  const [cols,rows]=w>0&&h>0?cameraShape(w/h):[9,9];
  const changed=!tiles.length||cameraCols!==cols||cameraRows!==rows;
@@ -137,7 +174,7 @@ function tileView(x,y){
  if(kind==='#')return [(x+y)%2===0?'wall':'stone',''];
  if(patrolAt(x,y))return ['sentry','o'];
  const index=atGate(x,y);
- if(index>=0&&index<activeOptions().length)return ['gate',String(gateNumber(index))];
+ if(index>=0&&index<activeOptions().length)return [index===targetIndex()?'target':'gate',String(gateNumber(index))];
  if(kind==='S')return ['start','S'];
  if(visited.has(k))return ['trail',''];
  return [(x+y)%2===0?'path':'floor',''];
@@ -148,8 +185,13 @@ function paintMaze(){
 }
 function paintOptions(){
  const active=activeOptions();
- for(let i=0;i<optionRows.length;i++){const row=optionRows[i],option=active[i];row.hidden=!option;updateClass(row,option&&option===currentOption()?'option selected':'option');updateText(row,option?gateNumber(i)+' ['+compass[i]+'] '+option.text:'');}
- updateText(ui.page,'Gates '+(page*pageSize+1)+'-'+(page*pageSize+active.length)+' of '+options.length);
+ for(let i=0;i<optionRows.length;i++){
+  const row=optionRows[i],option=active[i],tracked=option&&option.id===targetId;
+  row.hidden=!option;setDisabled(row,!option||phase!=='playing'||overlay!=='question');
+  updateClass(row,tracked?'option selected':'option');
+  updateText(row,option?(tracked?'Tracking ':'Gate ')+gateNumber(i)+' ['+compass[i]+'] '+option.text:'');
+ }
+ updateText(ui.page,'Track a destination | Gates '+(page*pageSize+1)+'-'+(page*pageSize+active.length)+' of '+options.length);
  setDisabled(ui.previous,phase!=='playing'||overlay!=='question'||page===0);
  setDisabled(ui.next,phase!=='playing'||overlay!=='question'||(page+1)*pageSize>=options.length);
 }
@@ -159,7 +201,8 @@ function paintMap(){
  for(let y=0;y<world.size;y++){
   const line=[];
   for(let x=0;x<world.size;x++){
-   if(!explored.has(keyOf(x,y))){line.push('? ');continue;}
+   const gate=atGate(x,y);
+   if(!explored.has(keyOf(x,y))){line.push(gate>=0&&gate<activeOptions().length?String(gateNumber(gate)).padEnd(2,' '):'? ');continue;}
    const [name,label]=tileView(x,y);line.push(label?label.padEnd(2,' '):name==='wall'||name==='stone'?'# ':name==='trail'?'+ ':'. ');
   }
   lines.push(line.join(''));
@@ -174,7 +217,7 @@ function paintControls(){
  updateText(ui.confirm,choice?'Enter '+gateNumber(atGate(position.x,position.y)):'Enter gate');
  setDisabled(ui.info,phase!=='playing'||!!overlay);setDisabled(ui.map,phase!=='playing'||!!overlay);
  setDisabled(ui.exit,phase==='submitting'||phase==='exiting'||phase==='exited'||!!overlay);
- updateText(ui.progress,'Moves '+moves+' | Gates '+(page*pageSize+1)+'-'+(page*pageSize+activeOptions().length));
+ updateText(ui.progress,'Moves '+moves+' | '+(targetIndex()>=0?'Target '+gateNumber(targetIndex()):'Gates '+(page*pageSize+1)+'-'+(page*pageSize+activeOptions().length)));
 }
 function draw(){paintMaze();paintOptions();paintControls();paintMap();}
 function stopHold(){
@@ -188,28 +231,28 @@ function resetPlayer(message,clearMap=false){
  reveal();draw();announce(message);
 }
 function nextWorld(){
- world=buildWorld(Math.floor(Math.random()*4294967296));resetPlayer('New maze ready. Find the gate for your answer.',true);
+ world=buildWorld(Math.floor(Math.random()*4294967296));refreshTarget();resetPlayer('New maze ready. Choose a gate in Q&A.',true);
 }
 function advancePatrols(){turns++;if(turns%2===0)for(const p of world.patrols)p.index=1-p.index;return patrolAt(position.x,position.y);}
 function move(dx,dy){
  if(!canMove())return;
  const x=position.x+dx,y=position.y+dy;
- if(!available(x,y)){stopHold();announce('Wall ahead. Choose another direction.');return;}
+ if(!available(x,y)){stopHold();announce('Wall ahead. Try another direction.');return;}
  if(patrolAt(x,y)){resetPlayer('Sentry contact! Back to START.');return;}
  position={x,y};moves++;reveal();
  if(advancePatrols()){resetPlayer('Sentry contact! Back to START.');return;}
  if(currentOption())stopHold();
- draw();announce(currentOption()?'Gate '+gateNumber(atGate(x,y))+' ready. Enter or read ? for the choice.':'Row '+(y+1)+', column '+(x+1)+'. Watch the sentries.');
+ draw();announce(navigationMessage());
 }
 function waitTurn(){
  if(!canMove())return;
  if(advancePatrols()){resetPlayer('Sentry contact! Back to START.');return;}
- draw();announce('Waited one turn. Watch for an opening.');
+ draw();announce(navigationMessage());
 }
 function changePage(delta){
  if(phase!=='playing'||overlay!=='question')return;
  const target=page+delta;if(target<0||target*pageSize>=options.length)return;
- page=target;resetPlayer('New answer gates. Back to START.',true);
+ page=target;targetId=null;refreshTarget();draw();announce('New gates available. Your progress is preserved.');
 }
 function openOverlay(kind){
  if(!canMove())return;
@@ -219,7 +262,7 @@ function openOverlay(kind){
 function closeOverlay(){
  if(!overlay)return;
  const previous=overlay;overlay='';ui.modal.hidden=true;ui.mapModal.hidden=true;draw();
- (previous==='question'?ui.info:ui.map).focus();
+ (previous==='question'?ui.info:ui.map).focus();announce(navigationMessage());
 }
 function newMaze(){if(phase==='playing'&&overlay==='map'){nextWorld();closeOverlay();}}
 function scheduleHold(){

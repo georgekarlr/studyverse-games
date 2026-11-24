@@ -2,10 +2,9 @@ body{margin:0}
 .game{position:relative;width:100%;height:76vh;overflow:hidden;background-color:#07131d;color:#e2e8f0}
 body .game{height:100vh}
 .probe{position:absolute;top:0;left:0;width:1px;height:100vh;opacity:0;pointer-events:none}
-.field{position:absolute;top:66px;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:center}
-.board{width:100%;height:100%}
-.maze-row{display:flex;height:11.11%}
-.tile{width:11.11%;display:flex;align-items:center;justify-content:center;background-color:#0b1724}
+.field{position:absolute;top:72px;bottom:40px;left:0;right:0;display:flex;align-items:center;justify-content:center}
+.maze-row{display:flex}
+.tile{display:flex;align-items:center;justify-content:center;background-color:#0b1724}
 .mark{display:flex;align-items:center;justify-content:center;width:72%;height:72%;font-weight:700;font-size:14px}
 .wall{background-color:#475569;align-items:start}
 .stone{background-color:#3b4b5e;align-items:start}
@@ -14,18 +13,19 @@ body .game{height:100vh}
 .floor{background-color:#102030}
 .trail{background-color:#153b3d}
 .start .mark{background-color:#164e63}
-.gate .mark{background-color:#4338ca;border-radius:4px}
+.gate .mark,.target .mark{background-color:#4338ca;border-radius:4px}
+.target .mark{background-color:#7c3aed}
 .player .mark{background-color:#2dd4bf;color:#042f2e;border-radius:50%}
 .sentry .mark{background-color:#b45309;border-radius:50%}
-.hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:4px;background-color:#07131d}
+.hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:4px}
 h1{font-size:14px;margin:0;color:#a5f3fc}
 .menu,.action-row,.page-controls{display:flex;gap:4px}
-.status{position:absolute;top:48px;left:3px;right:3px;margin:0;text-align:center;font-size:11px}
+.status{position:absolute;top:48px;left:3px;right:3px;margin:0;text-align:center;font-size:12px}
 button{min-height:44px;margin:0;padding:4px;border-radius:10px;color:white}
 .glass{background-color:#334155;opacity:0.80}
 .menu .glass{min-width:44px}
-.direction{width:44px;height:44px;background-color:#334155;opacity:0.74;font-size:24px;border-radius:50%}
-.held{background-color:#155e63}
+.direction{width:44px;height:44px;background-color:#334155;opacity:0.82;font-size:24px;border-radius:50%}
+.held{background-color:#0f766e}
 .dpad{position:absolute;left:6px;bottom:6px}
 .control-row{display:flex;justify-content:center;gap:3px}
 .gate-actions{position:absolute;right:6px;bottom:6px;display:flex;flex-direction:column;gap:3px}
@@ -35,6 +35,7 @@ button{min-height:44px;margin:0;padding:4px;border-radius:10px;color:white}
 .modal-head{display:flex;justify-content:space-between}
 h2{font-size:20px;color:#a5f3fc}
 .question{font-size:18px}
-.option{padding:8px;background-color:#0b1724}
-.selected{background-color:#164e63}
+.choices{display:flex;flex-direction:column;gap:6px}
+.option{padding:8px;background-color:#0b1724;text-align:left}
+.selected{background-color:#4338ca}
 .map-view{font-size:10px;background-color:#07131d}

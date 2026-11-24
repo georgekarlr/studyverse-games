@@ -15,7 +15,7 @@
  <header class="hud">
   <div class="brand"><h1>MAZE QUEST</h1><small id="progress">Preparing maze</small></div>
   <div class="menu">
-   <button id="info" class="glass" type="button" aria-label="Read question and answers" disabled>?</button>
+   <button id="info" class="glass" type="button" aria-label="Read question and answers" disabled>Q&amp;A</button>
    <button id="map" class="glass" type="button" disabled>Map</button>
    <button id="exit" class="glass" type="button" aria-label="Exit to Standard" disabled>X</button>
   </div>
@@ -40,17 +40,17 @@
   <div class="modal-head"><h2>Question &amp; gates</h2><button id="close-question" class="glass" type="button" aria-label="Return to maze">X</button></div>
   <p class="question" id="question"></p>
   <p id="page-info"></p>
-  <div id="options"></div>
+  <div id="options" class="choices" aria-label="Track a gate without submitting"></div>
   <div class="page-controls">
    <button id="previous" class="glass" type="button">Previous</button>
    <button id="next" class="glass" type="button">Next</button>
   </div>
-  <p class="help">The four gates are at the maze corners: northwest, northeast, southwest and southeast. Tap or hold a direction, or use WASD. Orange sentries move every two turns; Wait advances a turn. Contact returns you to START. Use Map to explore. Reach your chosen gate and press Enter gate to submit.</p>
-  <button id="resume" class="enter" type="button">Back to maze</button>
+  <p class="help">Tap an answer to track its gate, not to submit. Follow the compass and distance. Orange sentries move every two turns; Wait advances a turn. Contact returns you to START. Use Map to see discovered corridors. Reach a gate and press Enter to submit.</p>
+  <button id="resume" class="enter" type="button">Explore maze</button>
  </section>
  <section id="map-modal" class="modal" role="dialog" aria-modal="true" aria-label="Explored maze map" hidden>
   <div class="modal-head"><h2>Explored maze</h2><button id="close-map" class="glass" type="button" aria-label="Return to maze">X</button></div>
-  <p class="help">P player | S start | 1-30 gates | # wall | . path | + trail | o sentry | ? unexplored</p>
+  <p class="help">P player | S start | numbered gates (known locations) | # wall | . path | + trail | o sentry | ? unexplored</p>
   <pre id="map-view" class="map-view" aria-label="Explored maze grid"></pre>
   <button id="new-maze" class="glass" type="button">Generate new maze</button>
   <button id="map-resume" class="enter" type="button">Back to maze</button>
