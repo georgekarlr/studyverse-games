@@ -15,12 +15,13 @@
   <div class="brand"><h1>MAZE QUEST</h1><small id="progress">Preparing maze</small></div>
   <div class="menu">
    <button id="info" class="glass" type="button" disabled>Question</button>
+   <button id="map" class="glass" type="button" disabled>Map</button>
    <button id="exit" class="glass" type="button" aria-label="Exit to Standard" disabled>X</button>
   </div>
  </header>
  <p class="status" id="status" role="status" aria-live="polite">Connecting to StudyVerse...</p>
  <section id="play-area" class="play-area" hidden>
-  <div class="dpad" aria-label="Floating movement controller">
+  <div class="dpad" aria-label="Floating directional joystick">
    <div class="control-row"><button id="up" class="direction" type="button" aria-label="Move up">&#8593;</button></div>
    <div class="control-row">
     <button id="left" class="direction" type="button" aria-label="Move left">&#8592;</button>
@@ -30,7 +31,8 @@
   </div>
   <div class="gate-actions" aria-label="Gate actions">
    <button id="confirm" class="enter" type="button" disabled>Enter gate</button>
-   <button id="reset" class="glass" type="button">Reset</button>
+   <button id="wait" class="glass" type="button">Wait</button>
+   <button id="reset" class="glass" type="button">Restart</button>
   </div>
  </section>
  <section id="question-modal" class="modal" role="dialog" aria-label="Question and answer gates" hidden>
@@ -42,8 +44,15 @@
    <button id="previous" class="glass" type="button">Previous</button>
    <button id="next" class="glass" type="button">Next</button>
   </div>
-  <p class="help">Use the arrows or WASD to navigate. The teal player starts on S. Match the numbered gate to your answer; Enter gate submits it. Reading or reaching a gate does not submit.</p>
+  <p class="help">Tap or hold the floating arrows, or use WASD. Orange sentries advance every two turns; Wait advances a turn. Contact returns you to START. Use Map to see explored paths. Match a numbered gate to your answer and press Enter gate to submit.</p>
   <button id="resume" class="enter" type="button">Back to maze</button>
+ </section>
+ <section id="map-modal" class="modal" role="dialog" aria-label="Explored maze map" hidden>
+  <div class="modal-head"><h2>Explored maze</h2><button id="close-map" class="glass" type="button" aria-label="Return to maze">X</button></div>
+  <p class="help">P player | S start | 1-30 gates | # wall | . path | + trail | o sentry | ? unexplored</p>
+  <pre id="map-view" class="map-view" aria-label="Explored maze grid"></pre>
+  <button id="new-maze" class="glass" type="button">Generate new maze</button>
+  <button id="map-resume" class="enter" type="button">Back to maze</button>
  </section>
 </main>
 <script type="module" src="./main.js"></script>
