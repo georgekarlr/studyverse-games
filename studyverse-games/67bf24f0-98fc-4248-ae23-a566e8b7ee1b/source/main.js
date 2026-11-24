@@ -90,7 +90,7 @@ function navigationMessage(){
  const choice=currentOption();if(choice)return 'Gate '+gateNumber(atGate(position.x,position.y))+': '+shortChoice(choice.text);
  const gate=targetGate();if(!gate)return 'Choose a target in Q&A, or explore freely.';
  const n=targetDistances.get(keyOf(position.x,position.y));
- return 'Target '+gateNumber(targetIndex())+' '+bearing(gate)+(n===undefined?' | Check map':' | '+n+' safe steps');
+ return 'Target '+gateNumber(targetIndex())+' '+bearing(gate)+(n===undefined?' | Check map':' | '+n+' steps');
 }
 function trackOption(index){
  if(phase!=='playing'||overlay!=='question')return;
@@ -192,6 +192,7 @@ function paintOptions(){
   updateText(row,option?(tracked?'Tracking ':'Gate ')+gateNumber(i)+' ['+compass[i]+'] '+option.text:'');
  }
  updateText(ui.page,'Track a destination | Gates '+(page*pageSize+1)+'-'+(page*pageSize+active.length)+' of '+options.length);
+ ui.previous.hidden=options.length<=pageSize;ui.next.hidden=options.length<=pageSize;
  setDisabled(ui.previous,phase!=='playing'||overlay!=='question'||page===0);
  setDisabled(ui.next,phase!=='playing'||overlay!=='question'||(page+1)*pageSize>=options.length);
 }
