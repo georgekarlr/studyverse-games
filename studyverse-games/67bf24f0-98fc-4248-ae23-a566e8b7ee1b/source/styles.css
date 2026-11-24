@@ -1,1 +1,26 @@
-body{font:16px system-ui;background:#0f172a;color:#e2e8f0;padding:2rem}#game-screen{max-width:740px;margin:auto}button{display:block;min-height:44px;margin:.5rem 0;padding:.65rem 1rem;background:#4f46e5;border:0;border-radius:.5rem;color:white;cursor:pointer}button:focus-visible{outline:3px solid #fbbf24}pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.game{box-sizing:border-box;max-width:740px;margin:0;padding:12px;background-color:#0f172a;color:#e2e8f0;border-radius:12px}
+.intro{padding:8px;background-color:#1e293b;border-radius:8px}
+h1{font-size:26px;color:#a5b4fc;margin:0}
+h2{font-size:18px;color:#c7d2fe;margin:0}
+p{line-height:1.4;margin:8px}
+.question{font-size:18px;font-weight:600;color:white;padding:8px}
+.progress{font-size:14px;color:#a5b4fc;text-align:center}
+.board{display:flex;flex-direction:column;gap:3px;width:100%;max-width:360px;box-sizing:border-box;padding:6px;background-color:#1e293b;border-radius:8px}
+.maze-row{display:flex;gap:3px;justify-content:center}
+.tile{display:flex;width:13%;height:34px;align-items:center;justify-content:center;border-radius:4px;font-size:14px;font-weight:700;box-sizing:border-box}
+.wall{background-color:#334155}
+.path{background-color:#0f172a}
+.gate{background-color:#4338ca;color:white}
+.player{background-color:#2dd4bf;color:#0f172a}
+.legend{font-size:13px;color:#cbd5e1}
+.controls{display:flex;flex-direction:column;gap:6px;padding:8px}
+.control-row{display:flex;gap:6px;justify-content:center}
+button{min-height:44px;padding:8px;border-radius:8px;font-size:14px;font-weight:600;color:white;background-color:#334155}
+.move{min-width:60px;background-color:#334155}
+.answer-panel{padding:8px;background-color:#1e293b;border-radius:8px}
+.option{padding:8px;background-color:#0f172a;border-radius:6px;color:#e2e8f0}
+.selected{background-color:#164e63;color:white}
+.actions{display:flex;flex-wrap:wrap;gap:8px;padding:6px}
+.primary{background-color:#4338ca;min-width:150px}
+.secondary{background-color:#334155}
+.status{padding:10px;background-color:#1e293b;color:#e2e8f0;border-radius:8px}

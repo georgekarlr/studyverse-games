@@ -1,2 +1,43 @@
 <!doctype html>
-<html lang="en"><head><link rel="stylesheet" href="./styles.css"></head><body><main id="game-screen" aria-label="Local Game preview"></main><script type="module" src="./main.js"></script></body></html>
+<html lang="en">
+<head><link rel="stylesheet" href="./styles.css"></head>
+<body>
+<main id="game-screen" class="game" aria-label="Maze Quest">
+ <header class="intro">
+  <h1>Maze Quest</h1>
+  <p>Explore the corridors. Reach the gate for your answer, then confirm.</p>
+ </header>
+ <p id="question" class="question">Loading Study Item...</p>
+ <p id="progress" class="progress">Preparing the maze.</p>
+ <section id="play-area" hidden>
+  <div id="board" class="board" aria-label="Maze board"></div>
+  <p class="legend">P = player. Number = answer gate. Dark blocks = walls.</p>
+  <div class="controls" aria-label="Movement controls">
+   <div class="control-row"><button id="up" type="button" class="move">Up</button></div>
+   <div class="control-row">
+    <button id="left" type="button" class="move">Left</button>
+    <button id="down" type="button" class="move">Down</button>
+    <button id="right" type="button" class="move">Right</button>
+   </div>
+  </div>
+  <p class="legend">Use the direction buttons or arrow keys.</p>
+  <section class="answer-panel" aria-label="Answer gates">
+   <h2>Choose your gate</h2>
+   <p id="page-info"></p>
+   <div id="options"></div>
+   <div class="actions">
+    <button id="previous" type="button" class="secondary">Previous gates</button>
+    <button id="next" type="button" class="secondary">Next gates</button>
+   </div>
+  </section>
+  <div class="actions">
+   <button id="confirm" type="button" class="primary" disabled>Confirm answer</button>
+   <button id="reset" type="button" class="secondary">Reset maze</button>
+  </div>
+ </section>
+ <p id="status" class="status" role="status" aria-live="polite">Waiting for StudyVerse.</p>
+ <button id="exit" type="button" class="secondary">Exit to Standard</button>
+</main>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
