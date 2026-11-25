@@ -132,11 +132,14 @@ function makeOptions(){
 // Never inspect or manipulate the host or parent document.
 let nativeFull=null,gameHeight=0,boardWidth=0,boardHeight=0;
 function cameraShape(ratio){
- if(ratio<0.47)return [5,13];
- if(ratio<0.82)return [7,11];
- if(ratio<1.22)return [9,9];
- if(ratio<2.25)return [11,7];
- return [13,5];
+ // Odd grids keep the hero centered and respect the 81-tile mirror budget.
+ const shapes=[[3,19],[5,13],[7,11],[9,9],[11,7],[13,5],[19,3]];
+ let best=shapes[0],error=Infinity;
+ for(const shape of shapes){
+  const difference=Math.abs(Math.log((shape[0]/shape[1])/ratio));
+  if(difference<error){best=shape;error=difference;}
+ }
+ return best;
 }
 function fitBoard(){
  const w=ui.field.clientWidth,viewport=ui.probe.clientHeight;
@@ -145,13 +148,15 @@ function fitBoard(){
   if(nativeFull===null)nativeFull=ui.game.clientHeight>=viewport*0.95;
   const desired=Math.max(100,viewport-(nativeFull?0:w<=320?90:70));
   if(gameHeight!==desired){gameHeight=desired;ui.game.style.height=desired+'px';}
-  h=Math.max(1,desired-112);
+  // The field fills the game; HUD and controls overlay it.
+  h=Math.max(1,desired);
  }
  const [cols,rows]=w>0&&h>0?cameraShape(w/h):[9,9];
  const changed=!tiles.length||cameraCols!==cols||cameraRows!==rows;
  if(changed)makeBoard(cols,rows);
  if(w>0&&h>0){
-  const cell=Math.max(1,Math.floor(Math.min(w/cols,h/rows,100)));
+  // Cover with square cells, keeping the hero centered without letterboxing.
+  const cell=Math.max(1,Math.ceil(Math.max(w/cols,h/rows)));
   const width=cell*cols,height=cell*rows;
   if(width!==boardWidth||height!==boardHeight){
    boardWidth=width;boardHeight=height;
@@ -210,7 +215,7 @@ function paintMap(){
   for(let x=0;x<world.size;x++){
    const gate=atGate(x,y);
    if(!explored.has(keyOf(x,y))){line.push(gate>=0&&gate<activeOptions().length?String(gateNumber(gate)).padEnd(2,' '):'? ');continue;}
-   const [name,label]=tileView(x,y);line.push(label?label.padEnd(2,' '):name==='wall'||name==='stone'?'# ':name==='trail'?'+ ':'. ');
+   const [name,label]=tileView(x,y);line.push(name==='sentry'?'! ':label?label.padEnd(2,' '):name==='wall'||name==='stone'?'# ':name==='trail'?'+ ':'. ');
   }
   lines.push(line.join(''));
  }
@@ -221,7 +226,7 @@ function paintControls(){
  for(const d of directions)setDisabled(d.button,!ready);
  setDisabled(ui.reset,!ready);setDisabled(ui.wait,!ready);setDisabled(ui.confirm,!ready||!choice);
  updateClass(ui.confirm,ready&&choice?'enter gate-ready':'enter');
- updateText(ui.confirm,choice?'Enter '+gateNumber(atGate(position.x,position.y)):'Enter gate');
+ updateText(ui.confirm,choice?'Enter gate '+gateNumber(atGate(position.x,position.y)):'Reach a gate');
  setDisabled(ui.info,phase!=='playing'||!!overlay);setDisabled(ui.map,phase!=='playing'||!!overlay);
  setDisabled(ui.exit,phase==='submitting'||phase==='exiting'||phase==='exited'||!!overlay);
  updateText(ui.progress,'Moves '+moves+' | '+(targetIndex()>=0?'Target '+gateNumber(targetIndex()):'Gates '+(page*pageSize+1)+'-'+(page*pageSize+activeOptions().length)));
@@ -311,7 +316,7 @@ async function submit(){
  try{
   const receipt=await sdk.submitAnswer({item_id:item.id,response:{value:selected.id}});
   if(receipt&&receipt.ok===false)throw new Error('Response not accepted');
-  phase='submitted';announce(receipt&&receipt.status==='preview_only'?'Preview received. No answer or score saved.':'Response sent. Continue in StudyVerse.');
+  phase='submitted';announce(receipt&&receipt.status==='preview_only'?'Preview complete. No study progress changed.':'Continue in StudyVerse.');
  }catch{phase='uncertain';announce('Submission unconfirmed. Exit or restart preview; do not retry.');}
  finally{draw();}
 }
@@ -336,7 +341,18 @@ function bindControls(){
  ui.wait.addEventListener('click',waitTurn);ui.previous.addEventListener('click',()=>changePage(-1));ui.next.addEventListener('click',()=>changePage(1));
  for(const d of directions)bindDirection(d);
  document.addEventListener('keydown',event=>{
-  if(overlay){if(event.key==='Escape'){event.preventDefault();closeOverlay();}return;}
+  if(overlay){
+   if(event.key==='Escape'){event.preventDefault();closeOverlay();return;}
+   if(event.key==='Tab'){
+    const controls=(overlay==='question'?[ui.close,...optionRows,ui.previous,ui.next,ui.resume]:[ui.mapClose,ui.newMaze,ui.mapResume]).filter(node=>!node.hidden&&!node.disabled);
+    if(controls.length){
+     const first=controls[0],last=controls[controls.length-1],active=document.activeElement;
+     if(event.shiftKey&&active===first){event.preventDefault();last.focus();}
+     else if(!event.shiftKey&&active===last){event.preventDefault();first.focus();}
+    }
+   }
+   return;
+  }
   if(!canMove()||event.altKey||event.ctrlKey||event.metaKey)return;
   const key=event.key.toLowerCase();
   if(key==='i'){event.preventDefault();openOverlay('question');return;}

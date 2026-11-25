@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
  <meta charset="utf-8">
- <meta name="viewport" content="width=device-width, initial-scale=1">
+ <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
  <title>Maze Quest</title>
  <link rel="stylesheet" href="./styles.css">
 </head>
@@ -23,12 +23,12 @@
   <div class="menu">
    <button id="info" class="glass" type="button" aria-label="Read question and answers" disabled>Q&amp;A</button>
    <button id="map" class="glass" type="button" disabled>Map</button>
-   <button id="exit" class="glass" type="button" aria-label="Exit to Standard" disabled>X</button>
+   <button id="exit" class="glass" type="button" aria-label="Exit to Study Standard" disabled>Exit</button>
   </div>
  </header>
  <p class="status" id="status" role="status" aria-live="polite">Connecting to StudyVerse...</p>
  <section id="play-area" class="play-area" hidden>
-  <div class="dpad" aria-label="Floating directional joystick">
+  <div class="dpad" aria-label="Directional movement controls">
    <div class="control-row"><button id="up" class="direction" type="button" aria-label="Move up">&#8593;</button></div>
    <div class="control-row">
     <button id="left" class="direction" type="button" aria-label="Move left">&#8592;</button>
@@ -43,20 +43,20 @@
   </div>
  </section>
  <section id="question-modal" class="modal" role="dialog" aria-modal="true" aria-label="Question and answer gates" hidden>
-  <div class="modal-head"><h2>Question &amp; gates</h2><button id="close-question" class="glass" type="button" aria-label="Return to maze">X</button></div>
+  <div class="modal-head"><h2>Question &amp; gates</h2><button id="close-question" class="glass" type="button" aria-label="Return to maze">Close</button></div>
   <p class="question" id="question"></p>
   <p id="page-info"></p>
   <div id="options" class="choices" aria-label="Track a gate without submitting"></div>
   <div class="page-controls">
-   <button id="previous" class="glass" type="button">Previous</button>
-   <button id="next" class="glass" type="button">Next</button>
+   <button id="previous" class="glass" type="button">Previous gates</button>
+   <button id="next" class="glass" type="button">Next gates</button>
   </div>
-  <p class="help">Tap an answer to track its gate, not to submit. Follow the compass and distance. Amber sentries move every two turns; Wait advances a turn. Contact returns you to START. Use Map to see discovered corridors. Reach a gate and press Enter to submit.</p>
+  <p class="help">Choose an answer to track its gate. Follow the compass and step count, or explore freely. Amber sentries move every two turns; Wait advances a turn. Contact returns you to START. Use Map to see discovered corridors. Reach your chosen gate and tap Enter gate to confirm. StudyVerse handles checking and the next item.</p>
   <button id="resume" class="enter" type="button">Explore maze</button>
  </section>
  <section id="map-modal" class="modal" role="dialog" aria-modal="true" aria-label="Explored maze map" hidden>
-  <div class="modal-head"><h2>Explored maze</h2><button id="close-map" class="glass" type="button" aria-label="Return to maze">X</button></div>
-  <p class="help">P adventurer | S start | numbers = gates | # stone | . floor | + trail | o sentry | ? unexplored</p>
+  <div class="modal-head"><h2>Explored maze</h2><button id="close-map" class="glass" type="button" aria-label="Return to maze">Close</button></div>
+  <p class="help">P = you | S = start | numbers = gates | # = wall | . = floor | + = trail | ! = sentry | ? = unexplored</p>
   <pre id="map-view" class="map-view" aria-label="Explored maze grid"></pre>
   <button id="new-maze" class="glass" type="button">Generate new maze</button>
   <button id="map-resume" class="enter" type="button">Back to maze</button>
