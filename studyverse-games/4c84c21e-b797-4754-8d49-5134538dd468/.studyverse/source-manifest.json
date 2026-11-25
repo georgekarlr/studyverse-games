@@ -6,7 +6,7 @@
   "entry_path": "index.html",
   "entry_file_id": "dd6068ca-007d-4d08-be05-9bc4f84db479",
   "created_at": "2026-11-17T06:32:08.486Z",
-  "updated_at": "2026-11-22T17:10:00.000Z",
+  "updated_at": "2026-11-25T05:16:00.000Z",
   "empty_directories": [],
   "source_files": [
     {
@@ -20,8 +20,8 @@
       "id": "589c9ed4-c2e4-4a62-8eb6-77f9f9f090ca",
       "path": "focus-layout.css",
       "language": "css",
-      "size_bytes": 7549,
-      "sha256_hex": "6837f339d632583bda29e2b37e5caca078ae8bc4fea40ad69c1989d91a647d8e"
+      "size_bytes": 8315,
+      "sha256_hex": "969ce135be4ec9232134b46ebdedd562ad52e607617d315248b5c9967d141f10"
     },
     {
       "id": "dd6068ca-007d-4d08-be05-9bc4f84db479",
