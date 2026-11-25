@@ -83,3 +83,7 @@ h2{margin:0;color:#99f6e4;font-size:clamp(16px,4.5vw,23px);line-height:1.2}
  .modal{top:max(20px,var(--safe-top,0px));bottom:max(20px,var(--safe-bottom,0px))}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+
+/* Temporary arcade hazard sprites, never a permanent path or trace color. */
+.arrow-warning .mark{width:82%;height:82%;background-color:#523c20;border:2px dashed #facc72;border-radius:6px;color:#fde4a8;font-size:clamp(18px,4vw,34px);font-weight:800;line-height:1}
+.arrow-flight .mark{width:88%;height:62%;background-color:#9a4b19;border:2px solid #ffde94;border-radius:8px;color:#fff6d8;font-size:clamp(20px,4.4vw,36px);font-weight:800;line-height:1;box-shadow:0 0 10px #f6b64c}

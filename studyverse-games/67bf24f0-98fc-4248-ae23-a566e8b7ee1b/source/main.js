@@ -85,6 +85,92 @@ function announce(message){if(ui.status.textContent!==message)ui.status.textCont
 function updateText(el,value){if(el.textContent!==value)el.textContent=value;}
 function updateClass(el,value){if(el.className!==value)el.className=value;}
 function setDisabled(el,value){if(el.disabled!==value)el.disabled=value;}
+// Arcade-only tile animation. A single bounded hazard moves through open
+// visible corridors; no answer data, scoring or host navigation is involved.
+const ARROW_TICK_MS=200,ARROW_PERIOD_TICKS=10,ARROW_WARNING_TICKS=2;
+const arrowDirections=[{dx:1,dy:0,glyph:'→'},{dx:-1,dy:0,glyph:'←'},{dx:0,dy:1,glyph:'↓'},{dx:0,dy:-1,glyph:'↑'}];
+function chooseArrow(grid,center,cols,rows,rng=Math.random){
+ const hx=Math.floor(cols/2),hy=Math.floor(rows/2),candidates=[];
+ const floor=(x,y)=>grid[y]?.[x]==='.';
+ for(let y=Math.max(1,center.y-hy);y<=Math.min(grid.length-2,center.y+hy);y++){
+  for(let x=Math.max(1,center.x-hx);x<=Math.min(grid[0].length-2,center.x+hx);x++){
+   if(!floor(x,y)||(x===center.x&&y===center.y))continue;
+   for(const d of arrowDirections){
+    const cells=[];
+    for(let step=0;step<5;step++){
+     const nx=x+d.dx*step,ny=y+d.dy*step;
+     if(!floor(nx,ny)||Math.abs(nx-center.x)>hx||Math.abs(ny-center.y)>hy)break;
+     cells.push({x:nx,y:ny});
+    }
+    if(cells.length>=2)candidates.push({cells,glyph:d.glyph});
+   }
+  }
+ }
+ return candidates.length?candidates[Math.floor(rng()*candidates.length)]:null;
+}
+function createArrowHazard(){
+ let tick=0,arrow=null,index=-1;
+ function current(){
+  if(!arrow)return null;
+  const cell=arrow.cells[Math.max(index,0)];
+  return {...cell,glyph:arrow.glyph,warning:index<0};
+ }
+ return {
+  reset(){tick=0;arrow=null;index=-1;},
+  current,
+  hit(p){const a=current();return !!a&&!a.warning&&a.x===p.x&&a.y===p.y;},
+  step(grid,center,cols,rows,rng=Math.random){
+   tick=(tick+1)%ARROW_PERIOD_TICKS;
+   if(tick===ARROW_PERIOD_TICKS-ARROW_WARNING_TICKS){arrow=chooseArrow(grid,center,cols,rows,rng);index=-1;}
+   else if(arrow&&(tick===0||index>=0)){
+    index++;
+    if(index>=arrow.cells.length){arrow=null;index=-1;}
+   }
+   return current();
+  }
+ };
+}
+const arrows=createArrowHazard();
+let hazardTimer=null,hazardFrame=null,hazardLast=null,hazardFrameCount=0,scopedHazardsFinished=false;
+const nativeHazardTimer=typeof window.setInterval==='function'&&typeof window.clearInterval==='function';
+function tickHazards(){
+ if(!canMove()||document.hidden)return;
+ arrows.step(world.grid,position,cameraCols,cameraRows);
+ if(arrows.hit(position)){resetPlayer('Arrow hit. Back to START — 0 moves.');return;}
+ paintMaze();
+}
+function scopedHazardFrame(stamp){
+ hazardFrame=null;
+ if(!canMove()||document.hidden)return;
+ if(hazardLast===null)hazardLast=stamp;
+ if(stamp-hazardLast>=ARROW_TICK_MS){hazardLast=stamp;tickHazards();}
+ scheduleScopedHazards();
+}
+function scheduleScopedHazards(){
+ if(hazardFrame!==null||!canMove()||document.hidden||scopedHazardsFinished)return;
+ // The isolated online preview has a finite total animation-turn budget.
+ // Do not consume its whole budget or interfere with movement / resize.
+ if(hazardFrameCount>=1800){
+  scopedHazardsFinished=true;arrows.reset();paintMaze();
+  announce('Timed hazards paused for this limited preview. Keep exploring.');
+  return;
+ }
+ if(typeof window.requestAnimationFrame==='function'){
+  hazardFrameCount++;hazardFrame=window.requestAnimationFrame(scopedHazardFrame);
+ }
+}
+function startHazards(){
+ if(!canMove()||document.hidden)return;
+ if(nativeHazardTimer){
+  if(hazardTimer===null)hazardTimer=window.setInterval(tickHazards,ARROW_TICK_MS);
+ }else scheduleScopedHazards();
+}
+function stopHazards(){
+ if(hazardTimer!==null){window.clearInterval(hazardTimer);hazardTimer=null;}
+ if(hazardFrame!==null){window.cancelAnimationFrame(hazardFrame);hazardFrame=null;}
+ hazardLast=null;
+}
+
 function makeBoard(cols,rows){
  cameraCols=cols;cameraRows=rows;tiles.length=0;ui.board.replaceChildren();
  for(let y=0;y<rows;y++){
@@ -200,8 +286,14 @@ function tileView(x,y,includePlayer=true){
  return ['floor',''];
 }
 function paintMaze(){
- const hx=Math.floor(cameraCols/2),hy=Math.floor(cameraRows/2);
- for(const tile of tiles){const [name,label]=tileView(position.x+tile.x-hx,position.y+tile.y-hy,false);updateClass(tile.el,'tile '+name);updateText(tile.mark,label);}
+ const hx=Math.floor(cameraCols/2),hy=Math.floor(cameraRows/2),arrow=arrows.current();
+ for(const tile of tiles){
+  const x=position.x+tile.x-hx,y=position.y+tile.y-hy;
+  const [name,label]=tileView(x,y,false);
+  const here=arrow&&arrow.x===x&&arrow.y===y;
+  updateClass(tile.el,'tile '+name+(here?(arrow.warning?' arrow-warning':' arrow-flight'):''));
+  updateText(tile.mark,here?arrow.glyph:label);
+ }
 }
 function paintOptions(){
  const active=activeOptions();
@@ -246,7 +338,7 @@ function stopHold(){
  if(held){updateClass(held.direction.button,'direction');held=null;}
 }
 function resetPlayer(message,clearMap=false){
- stopHold();position={...world.start};moves=0;
+ stopHold();arrows.reset();position={...world.start};moves=0;
  if(clearMap)explored=new Set();
  reveal();draw();announce(message);
 }
@@ -258,6 +350,8 @@ function move(dx,dy){
  const x=position.x+dx,y=position.y+dy;
  if(!available(x,y)){stopHold();announce('Wall ahead. Try another direction.');return;}
  position={x,y};moves++;reveal();
+ if(arrows.hit(position)){resetPlayer('Arrow hit. Back to START — 0 moves.');return;}
+ startHazards();
  if(currentOption())stopHold();
  draw();announce(navigationMessage());
 }
@@ -268,13 +362,13 @@ function changePage(delta){
 }
 function openOverlay(kind){
  if(!canMove())return;
- stopHold();overlay=kind;ui.modal.hidden=kind!=='question';ui.mapModal.hidden=kind!=='map';draw();
+ stopHold();stopHazards();overlay=kind;ui.modal.hidden=kind!=='question';ui.mapModal.hidden=kind!=='map';draw();
  (kind==='question'?ui.close:ui.mapClose).focus();
 }
 function closeOverlay(){
  if(!overlay)return;
  const previous=overlay;overlay='';ui.modal.hidden=true;ui.mapModal.hidden=true;draw();
- (previous==='question'?ui.info:ui.map).focus();announce(navigationMessage());
+ (previous==='question'?ui.info:ui.map).focus();announce(navigationMessage());startHazards();
 }
 function newMaze(){if(phase==='playing'&&overlay==='map'){nextWorld();closeOverlay();}}
 function scheduleHold(){
@@ -312,7 +406,7 @@ function bindDirection(d){
 async function submit(){
  if(!canMove())return;
  const selected=currentOption();if(!selected||!options.some(option=>option.id===selected.id))return;
- stopHold();phase='submitting';draw();announce('Sending your selected gate...');
+ stopHold();stopHazards();arrows.reset();phase='submitting';draw();announce('Sending your selected gate...');
  try{
   const receipt=await sdk.submitAnswer({item_id:item.id,response:{value:selected.id}});
   if(receipt&&receipt.ok===false)throw new Error('Response not accepted');
@@ -322,10 +416,10 @@ async function submit(){
 }
 async function leave(){
  if(!sdk||phase==='submitting'||phase==='exiting'||phase==='exited'||overlay)return;
- const previous=phase;stopHold();phase='exiting';ui.exit.disabled=true;
+ const previous=phase;stopHold();stopHazards();arrows.reset();phase='exiting';ui.exit.disabled=true;
  if(world)draw();announce('Returning to Standard...');
  try{await sdk.exitToStandard();phase='exited';announce('Exited to Standard.');}
- catch{phase=previous;ui.exit.disabled=false;if(world)draw();announce('Use the StudyVerse host controls to exit.');}
+ catch{phase=previous;ui.exit.disabled=false;if(world)draw();announce('Use the StudyVerse host controls to exit.');startHazards();}
 }
 function normalizeItem(raw){
  if(!raw||raw.item_type!=='multiple_choice'||typeof raw.id!=='string'||!raw.id.trim()||!raw.content||typeof raw.content.question!=='string'||!raw.content.question.trim())return null;
@@ -359,8 +453,10 @@ function bindControls(){
   if(key==='m'){event.preventDefault();openOverlay('map');return;}
   const d=directions.find(d=>d.keys.includes(key));if(d){event.preventDefault();stopHold();move(d.dx,d.dy);}
  });
- window.addEventListener('blur',stopHold);window.addEventListener('pagehide',()=>{stopHold();stopWatching();});
- document.addEventListener('visibilitychange',()=>{if(document.hidden)stopHold();});
+ window.addEventListener('blur',()=>{stopHold();if(nativeHazardTimer)stopHazards();});
+ if(nativeHazardTimer)window.addEventListener('focus',startHazards);
+ window.addEventListener('pagehide',()=>{stopHold();stopHazards();stopWatching();});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){stopHold();stopHazards();}else startHazards();});
 }
 async function init(){
  bindControls();
@@ -369,7 +465,7 @@ async function init(){
  try{
   item=normalizeItem(await sdk.getItem());ui.exit.disabled=false;
   if(!item){phase='unavailable';announce('Incompatible Study Item. Exit to Standard.');return;}
-  options=item.options;ui.question.textContent=item.question;makeOptions();phase='playing';ui.play.hidden=false;nextWorld();watchField();
+  options=item.options;ui.question.textContent=item.question;makeOptions();phase='playing';ui.play.hidden=false;nextWorld();watchField();startHazards();
  }catch{phase='unavailable';ui.exit.disabled=false;announce('Could not load the Study Item. Exit to Standard.');}
 }
 void init();
