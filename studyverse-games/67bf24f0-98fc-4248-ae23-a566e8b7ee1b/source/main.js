@@ -20,31 +20,14 @@ function buildWorld(seed){
  }
  for(const c of shuffle(loops).slice(0,6))grid[c.y][c.x]='.';
  grid[start.y][start.x]='S';for(const c of gates)grid[c.y][c.x]='G';
- function reachable(blocked){
-  const seen=new Set([key(start.x,start.y)]),queue=[start];
-  for(let i=0;i<queue.length;i++){const c=queue[i];for(const [dx,dy] of steps){const x=c.x+dx,y=c.y+dy,k=key(x,y);if(grid[y]?.[x]&&grid[y][x]!=='#'&&!blocked.has(k)&&!seen.has(k)){seen.add(k);queue.push({x,y});}}}
-  return seen;
- }
- // Even treating every patrol cell as permanently blocked leaves every gate reachable.
- const pairs=[];
- for(let y=1;y<size-1;y++)for(let x=1;x<size-1;x++){
-  if(grid[y][x]!=='.'||Math.abs(x-start.x)+Math.abs(y-start.y)<4)continue;
-  for(const [dx,dy] of [[1,0],[0,1]]){const nx=x+dx,ny=y+dy;if(grid[ny]?.[nx]==='.'&&Math.abs(nx-start.x)+Math.abs(ny-start.y)>=4)pairs.push([{x,y},{x:nx,y:ny}]);}
- }
- const blocked=new Set(),patrols=[];
- for(const pair of shuffle(pairs)){
-  const keys=pair.map(c=>key(c.x,c.y));if(keys.some(k=>blocked.has(k)))continue;
-  const trial=new Set(blocked);for(const k of keys)trial.add(k);
-  const seen=reachable(trial);if(!gates.every(c=>seen.has(key(c.x,c.y))))continue;
-  for(const k of keys)blocked.add(k);patrols.push({cells:pair,index:0});if(patrols.length===3)break;
- }
- return {size,grid,start,gates,patrols};
+ // Every gate remains reachable through the generated corridors.
+ return {size,grid,start,gates};
 }
 const pageSize=4;
 let cameraCols=9,cameraRows=9;
 const compass=["NW","NE","SW","SE"];
 const get=id=>document.querySelector('#'+id);
-const ui={game:get('game-screen'),probe:get('viewport-probe'),field:get('maze-field'),board:get('board'),hero:get('hero'),options:get('options'),question:get('question'),progress:get('progress'),status:get('status'),play:get('play-area'),page:get('page-info'),modal:get('question-modal'),info:get('info'),close:get('close-question'),resume:get('resume'),confirm:get('confirm'),previous:get('previous'),next:get('next'),reset:get('reset'),exit:get('exit'),map:get('map'),mapModal:get('map-modal'),mapView:get('map-view'),mapClose:get('close-map'),mapResume:get('map-resume'),newMaze:get('new-maze'),wait:get('wait')};
+const ui={game:get('game-screen'),probe:get('viewport-probe'),field:get('maze-field'),board:get('board'),hero:get('hero'),options:get('options'),question:get('question'),progress:get('progress'),status:get('status'),play:get('play-area'),page:get('page-info'),modal:get('question-modal'),info:get('info'),close:get('close-question'),resume:get('resume'),confirm:get('confirm'),previous:get('previous'),next:get('next'),reset:get('reset'),exit:get('exit'),map:get('map'),mapModal:get('map-modal'),mapView:get('map-view'),mapClose:get('close-map'),mapResume:get('map-resume'),newMaze:get('new-maze')};
 const directions=[
  {button:get('up'),dx:0,dy:-1,keys:['arrowup','w']},
  {button:get('down'),dx:0,dy:1,keys:['arrowdown','s']},
@@ -52,8 +35,8 @@ const directions=[
  {button:get('right'),dx:1,dy:0,keys:['arrowright','d']}
 ];
 const tiles=[],optionRows=[];
-let sdk=null,item=null,options=[],world=null,page=0,position=null,moves=0,turns=0;
-let explored=new Set(),visited=new Set(),phase='loading',overlay='';
+let sdk=null,item=null,options=[],world=null,page=0,position=null,moves=0;
+let explored=new Set(),phase='loading',overlay='';
 let targetId=null,targetDistances=new Map();
 let held=null,frame=null,frameCount=0;
 const keyOf=(x,y)=>x+','+y;
@@ -64,13 +47,13 @@ function gateNumber(i){return page*pageSize+i+1;}
 function targetIndex(){return activeOptions().findIndex(option=>option.id===targetId);}
 function targetGate(){return world.gates[targetIndex()]||null;}
 // Navigation distance only; never read an answer key or judge correctness.
-function distanceField(grid,goal,blocked){
+function distanceField(grid,goal){
  const key=(x,y)=>x+','+y,distances=new Map([[key(goal.x,goal.y),0]]),queue=[goal];
  for(let i=0;i<queue.length;i++){
   const c=queue[i],distance=distances.get(key(c.x,c.y));
   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
    const x=c.x+dx,y=c.y+dy,k=key(x,y);
-   if(!grid[y]?.[x]||grid[y][x]==='#'||blocked.has(k)||distances.has(k))continue;
+   if(!grid[y]?.[x]||grid[y][x]==='#'||distances.has(k))continue;
    distances.set(k,distance+1);queue.push({x,y});
   }
  }
@@ -78,8 +61,7 @@ function distanceField(grid,goal,blocked){
 }
 function refreshTarget(){
  targetDistances=new Map();const gate=targetGate();if(!gate)return;
- const blocked=new Set();for(const patrol of world.patrols)for(const cell of patrol.cells)blocked.add(keyOf(cell.x,cell.y));
- targetDistances=distanceField(world.grid,gate,blocked);
+ targetDistances=distanceField(world.grid,gate);
 }
 function bearing(gate){
  const dy=gate.y-position.y,dx=gate.x-position.x;
@@ -127,10 +109,12 @@ function makeBoard(cols,rows){
 function makeOptions(){
  for(let i=0;i<pageSize;i++){const el=document.createElement('button');el.className='option';el.setAttribute('type','button');el.addEventListener('click',()=>trackOption(i));optionRows.push(el);ui.options.append(el);}
 }
-// The invisible probe measures only our own authored 100vh element.
-// Native local preview has no trusted chrome; the scoped isolated player does.
-// Never inspect or manipulate the host or parent document.
+// Observe only the independent viewport probe, not the board or a field whose
+// height we may change. Defer all layout writes outside ResizeObserver delivery.
+// Native hosts use CSS viewport height; the scoped player keeps its bounded fallback.
 let nativeFull=null,gameHeight=0,boardWidth=0,boardHeight=0;
+let resizeFrame=null,resizeObserver=null,lastWidth=0,lastHeight=0;
+let watching=false;
 function cameraShape(ratio){
  // Odd grids keep the hero centered and respect the 81-tile mirror budget.
  const shapes=[[3,19],[5,13],[7,11],[9,9],[11,7],[13,5],[19,3]];
@@ -141,54 +125,79 @@ function cameraShape(ratio){
  }
  return best;
 }
+function viewportSize(){
+ const w=ui.probe.clientWidth||ui.field.clientWidth;
+ const h=ui.probe.clientHeight||ui.field.clientHeight;
+ return {w,h};
+}
 function fitBoard(){
- const w=ui.field.clientWidth,viewport=ui.probe.clientHeight;
- let h=ui.field.clientHeight;
- if(w>0&&viewport>0&&ui.game.clientHeight>0){
-  if(nativeFull===null)nativeFull=ui.game.clientHeight>=viewport*0.95;
-  const desired=Math.max(100,viewport-(nativeFull?0:w<=320?90:70));
-  if(gameHeight!==desired){gameHeight=desired;ui.game.style.height=desired+'px';}
-  // The field fills the game; HUD and controls overlay it.
-  h=Math.max(1,desired);
+ const {w,h:viewport}=viewportSize();
+ if(w<=0||viewport<=0)return;
+ if(nativeFull===null){
+  if(ui.game.clientHeight<=0)return;
+  nativeFull=ui.game.clientHeight>=viewport*0.95;
  }
- const [cols,rows]=w>0&&h>0?cameraShape(w/h):[9,9];
+ // Avoid any explicit height write in the native browser. In the isolated
+ // player only, preserve the existing reserved height for trusted host chrome.
+ const h=nativeFull?viewport:Math.max(100,viewport-(w<=320?90:70));
+ if(w===lastWidth&&viewport===lastHeight&&tiles.length)return;
+ lastWidth=w;lastHeight=viewport;
+ if(!nativeFull&&gameHeight!==h){gameHeight=h;ui.game.style.height=h+'px';}
+ const [cols,rows]=cameraShape(w/h);
  const changed=!tiles.length||cameraCols!==cols||cameraRows!==rows;
  if(changed)makeBoard(cols,rows);
- if(w>0&&h>0){
-  // Cover with square cells, keeping the hero centered without letterboxing.
-  const cell=Math.max(1,Math.ceil(Math.max(w/cols,h/rows)));
-  const width=cell*cols,height=cell*rows;
-  if(width!==boardWidth||height!==boardHeight){
-   boardWidth=width;boardHeight=height;
-   ui.board.style.width=width+'px';ui.board.style.height=height+'px';
-  }
- }
+ const cell=Math.max(1,Math.ceil(Math.max(w/cols,h/rows)));
+ const width=cell*cols,height=cell*rows;
+ if(width!==boardWidth){boardWidth=width;ui.board.style.width=width+'px';}
+ if(height!==boardHeight){boardHeight=height;ui.board.style.height=height+'px';}
  if(world&&changed){reveal();paintMaze();}
 }
+function scheduleFit(){
+ if(!watching||resizeFrame!==null)return;
+ const {w,h}=viewportSize();
+ if(w===lastWidth&&h===lastHeight&&tiles.length)return;
+ // rAF defers writes to the next frame; do not mutate observed geometry
+ // from a ResizeObserver notification. The scoped runtime also supports rAF.
+ if(typeof window.requestAnimationFrame==='function'){
+  resizeFrame=window.requestAnimationFrame(()=>{resizeFrame=null;if(watching)fitBoard();});
+ }else if(typeof window.setTimeout==='function'){
+  resizeFrame=window.setTimeout(()=>{resizeFrame=null;if(watching)fitBoard();},16);
+ }
+}
 function watchField(){
+ if(watching)return;
+ watching=true;
  fitBoard();
  if(typeof ResizeObserver==='function'){
-  const observer=new ResizeObserver(fitBoard);observer.observe(ui.field);observer.observe(ui.probe);
- }else window.addEventListener('resize',fitBoard);
+  resizeObserver=new ResizeObserver(scheduleFit);
+  resizeObserver.observe(ui.probe);
+ }
+ window.addEventListener('resize',scheduleFit);
 }
-function patrolAt(x,y){return world.patrols.some(p=>p.cells[p.index].x===x&&p.cells[p.index].y===y);}
+function stopWatching(){
+ watching=false;
+ if(resizeObserver){resizeObserver.disconnect();resizeObserver=null;}
+ if(resizeFrame!==null){
+  if(typeof window.cancelAnimationFrame==='function')window.cancelAnimationFrame(resizeFrame);
+  else if(typeof window.clearTimeout==='function')window.clearTimeout(resizeFrame);
+  resizeFrame=null;
+ }
+ window.removeEventListener('resize',scheduleFit);
+}
 function reveal(){
  const hx=Math.floor(cameraCols/2),hy=Math.floor(cameraRows/2);
  for(let y=position.y-hy;y<=position.y+hy;y++)for(let x=position.x-hx;x<=position.x+hx;x++)
   if(x>=0&&y>=0&&x<world.size&&y<world.size)explored.add(keyOf(x,y));
- visited.add(keyOf(position.x,position.y));
 }
 function tileView(x,y,includePlayer=true){
- const kind=world.grid[y]?.[x],k=keyOf(x,y);
+ const kind=world.grid[y]?.[x];
  if(!kind)return ['void',''];
  if(includePlayer&&x===position.x&&y===position.y)return ['player','P'];
  if(kind==='#')return [world.grid[y+1]?.[x]==='#'?'stone':'wall',''];
- if(patrolAt(x,y))return ['sentry',includePlayer?'o':'!'];
  const index=atGate(x,y);
  if(index>=0&&index<activeOptions().length)return [index===targetIndex()?'target':'gate',String(gateNumber(index))];
  if(kind==='S')return ['start','S'];
- if(visited.has(k))return ['trail',''];
- return [(x+y)%2===0?'path':'floor',''];
+ return ['floor',''];
 }
 function paintMaze(){
  const hx=Math.floor(cameraCols/2),hy=Math.floor(cameraRows/2);
@@ -215,7 +224,7 @@ function paintMap(){
   for(let x=0;x<world.size;x++){
    const gate=atGate(x,y);
    if(!explored.has(keyOf(x,y))){line.push(gate>=0&&gate<activeOptions().length?String(gateNumber(gate)).padEnd(2,' '):'? ');continue;}
-   const [name,label]=tileView(x,y);line.push(name==='sentry'?'! ':label?label.padEnd(2,' '):name==='wall'||name==='stone'?'# ':name==='trail'?'+ ':'. ');
+   const [name,label]=tileView(x,y);line.push(label?label.padEnd(2,' '):name==='wall'||name==='stone'?'# ':'. ');
   }
   lines.push(line.join(''));
  }
@@ -224,7 +233,7 @@ function paintMap(){
 function paintControls(){
  const ready=canMove(),choice=currentOption();
  for(const d of directions)setDisabled(d.button,!ready);
- setDisabled(ui.reset,!ready);setDisabled(ui.wait,!ready);setDisabled(ui.confirm,!ready||!choice);
+ setDisabled(ui.reset,!ready);setDisabled(ui.confirm,!ready||!choice);
  updateClass(ui.confirm,ready&&choice?'enter gate-ready':'enter');
  updateText(ui.confirm,choice?'Enter gate '+gateNumber(atGate(position.x,position.y)):'Reach a gate');
  setDisabled(ui.info,phase!=='playing'||!!overlay);setDisabled(ui.map,phase!=='playing'||!!overlay);
@@ -237,28 +246,19 @@ function stopHold(){
  if(held){updateClass(held.direction.button,'direction');held=null;}
 }
 function resetPlayer(message,clearMap=false){
- stopHold();position={...world.start};moves=0;turns=0;
- for(const p of world.patrols)p.index=0;
- if(clearMap){visited=new Set();explored=new Set();}
+ stopHold();position={...world.start};moves=0;
+ if(clearMap)explored=new Set();
  reveal();draw();announce(message);
 }
 function nextWorld(){
  world=buildWorld(Math.floor(Math.random()*4294967296));refreshTarget();resetPlayer('New maze ready. Choose a gate in Q&A.',true);
 }
-function advancePatrols(){turns++;if(turns%2===0)for(const p of world.patrols)p.index=1-p.index;return patrolAt(position.x,position.y);}
 function move(dx,dy){
  if(!canMove())return;
  const x=position.x+dx,y=position.y+dy;
  if(!available(x,y)){stopHold();announce('Wall ahead. Try another direction.');return;}
- if(patrolAt(x,y)){resetPlayer('Sentry contact! Back to START.');return;}
  position={x,y};moves++;reveal();
- if(advancePatrols()){resetPlayer('Sentry contact! Back to START.');return;}
  if(currentOption())stopHold();
- draw();announce(navigationMessage());
-}
-function waitTurn(){
- if(!canMove())return;
- if(advancePatrols()){resetPlayer('Sentry contact! Back to START.');return;}
  draw();announce(navigationMessage());
 }
 function changePage(delta){
@@ -338,7 +338,7 @@ function bindControls(){
  for(const b of [ui.close,ui.resume,ui.mapClose,ui.mapResume])b.addEventListener('click',closeOverlay);
  ui.newMaze.addEventListener('click',newMaze);ui.confirm.addEventListener('click',submit);
  ui.reset.addEventListener('click',()=>{if(canMove())resetPlayer('Back to START. Explored map preserved.');});
- ui.wait.addEventListener('click',waitTurn);ui.previous.addEventListener('click',()=>changePage(-1));ui.next.addEventListener('click',()=>changePage(1));
+ ui.previous.addEventListener('click',()=>changePage(-1));ui.next.addEventListener('click',()=>changePage(1));
  for(const d of directions)bindDirection(d);
  document.addEventListener('keydown',event=>{
   if(overlay){
@@ -359,7 +359,7 @@ function bindControls(){
   if(key==='m'){event.preventDefault();openOverlay('map');return;}
   const d=directions.find(d=>d.keys.includes(key));if(d){event.preventDefault();stopHold();move(d.dx,d.dy);}
  });
- window.addEventListener('blur',stopHold);window.addEventListener('pagehide',stopHold);
+ window.addEventListener('blur',stopHold);window.addEventListener('pagehide',()=>{stopHold();stopWatching();});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopHold();});
 }
 async function init(){
@@ -369,7 +369,7 @@ async function init(){
  try{
   item=normalizeItem(await sdk.getItem());ui.exit.disabled=false;
   if(!item){phase='unavailable';announce('Incompatible Study Item. Exit to Standard.');return;}
-  options=item.options;ui.question.textContent=item.question;makeOptions();phase='playing';ui.play.hidden=false;nextWorld();watchField();openOverlay('question');
+  options=item.options;ui.question.textContent=item.question;makeOptions();phase='playing';ui.play.hidden=false;nextWorld();watchField();
  }catch{phase='unavailable';ui.exit.disabled=false;announce('Could not load the Study Item. Exit to Standard.');}
 }
 void init();
