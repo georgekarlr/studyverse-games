@@ -84,6 +84,15 @@ h2{margin:0;color:#99f6e4;font-size:clamp(16px,4.5vw,23px);line-height:1.2}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 
-/* Temporary arcade hazard sprites, never a permanent path or trace color. */
-.arrow-warning .mark{width:82%;height:82%;background-color:#523c20;border:2px dashed #facc72;border-radius:6px;color:#fde4a8;font-size:clamp(18px,4vw,34px);font-weight:800;line-height:1}
-.arrow-flight .mark{width:88%;height:62%;background-color:#9a4b19;border:2px solid #ffde94;border-radius:8px;color:#fff6d8;font-size:clamp(20px,4.4vw,36px);font-weight:800;line-height:1;box-shadow:0 0 10px #f6b64c}
+/* Independent decorative sprite above the field, beneath the HUD and dialogs. */
+.projectile-layer{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none}
+.flying-arrow{position:absolute;width:44px;height:14px;pointer-events:none;transform-origin:center;filter:drop-shadow(0 2px 2px #07131c)}
+.arrow-shaft{position:absolute;left:8%;right:14%;top:6px;height:3px;background-color:#f5d69b;border-radius:2px;box-shadow:0 0 3px #241b10}
+.arrow-head{position:absolute;right:0;top:2px;width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;border-left:10px solid #f8fafc}
+.arrow-feathers{position:absolute;left:0;top:2px;width:12px;height:10px;background-color:#e6a54f;border:1px solid #ffdb92;border-radius:2px;transform:rotate(-15deg)}
+/* Clearer gate readiness, touch feedback and game HUD without reducing the arena. */
+#info:not(:disabled){border-color:#79cbbf;color:#c7fff0}
+.enter:disabled{background-color:#122d38;color:#d3e3e7;opacity:.88;box-shadow:none;border-color:#58737c}
+.gate-ready{color:#fff;box-shadow:0 0 12px #50e7b877}
+.direction:active,.direction.held{background-color:#0b7970;border-color:#b4ffec;box-shadow:inset 0 2px 4px #07272b}
+.status{border-color:#54727d}

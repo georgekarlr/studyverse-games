@@ -27,7 +27,7 @@ const pageSize=4;
 let cameraCols=9,cameraRows=9;
 const compass=["NW","NE","SW","SE"];
 const get=id=>document.querySelector('#'+id);
-const ui={game:get('game-screen'),probe:get('viewport-probe'),field:get('maze-field'),board:get('board'),hero:get('hero'),options:get('options'),question:get('question'),progress:get('progress'),status:get('status'),play:get('play-area'),page:get('page-info'),modal:get('question-modal'),info:get('info'),close:get('close-question'),resume:get('resume'),confirm:get('confirm'),previous:get('previous'),next:get('next'),reset:get('reset'),exit:get('exit'),map:get('map'),mapModal:get('map-modal'),mapView:get('map-view'),mapClose:get('close-map'),mapResume:get('map-resume'),newMaze:get('new-maze')};
+const ui={game:get('game-screen'),probe:get('viewport-probe'),field:get('maze-field'),board:get('board'),hero:get('hero'),projectile:get('flying-arrow'),options:get('options'),question:get('question'),progress:get('progress'),status:get('status'),play:get('play-area'),page:get('page-info'),modal:get('question-modal'),info:get('info'),close:get('close-question'),resume:get('resume'),confirm:get('confirm'),previous:get('previous'),next:get('next'),reset:get('reset'),exit:get('exit'),map:get('map'),mapModal:get('map-modal'),mapView:get('map-view'),mapClose:get('close-map'),mapResume:get('map-resume'),newMaze:get('new-maze')};
 const directions=[
  {button:get('up'),dx:0,dy:-1,keys:['arrowup','w']},
  {button:get('down'),dx:0,dy:1,keys:['arrowdown','s']},
@@ -70,7 +70,7 @@ function bearing(gate){
 function shortChoice(text){return text.length>32?text.slice(0,29)+'...':text;}
 function navigationMessage(){
  const choice=currentOption();if(choice)return 'Portal '+gateNumber(atGate(position.x,position.y))+': '+shortChoice(choice.text);
- const gate=targetGate();if(!gate)return 'Choose a target in Q&A, or explore freely.';
+ const gate=targetGate();if(!gate)return 'Open Q&A to choose a gate. Dodge flying arrows.';
  const n=targetDistances.get(keyOf(position.x,position.y));
  return 'Target '+gateNumber(targetIndex())+' '+bearing(gate)+(n===undefined?' | Check map':' | '+n+' steps');
 }
@@ -85,92 +85,114 @@ function announce(message){if(ui.status.textContent!==message)ui.status.textCont
 function updateText(el,value){if(el.textContent!==value)el.textContent=value;}
 function updateClass(el,value){if(el.className!==value)el.className=value;}
 function setDisabled(el,value){if(el.disabled!==value)el.disabled=value;}
-// Arcade-only tile animation. A single bounded hazard moves through open
-// visible corridors; no answer data, scoring or host navigation is involved.
-const ARROW_TICK_MS=200,ARROW_PERIOD_TICKS=10,ARROW_WARNING_TICKS=2;
-const arrowDirections=[{dx:1,dy:0,glyph:'→'},{dx:-1,dy:0,glyph:'←'},{dx:0,dy:1,glyph:'↓'},{dx:0,dy:-1,glyph:'↑'}];
-function chooseArrow(grid,center,cols,rows,rng=Math.random){
- const hx=Math.floor(cols/2),hy=Math.floor(rows/2),candidates=[];
- const floor=(x,y)=>grid[y]?.[x]==='.';
- for(let y=Math.max(1,center.y-hy);y<=Math.min(grid.length-2,center.y+hy);y++){
-  for(let x=Math.max(1,center.x-hx);x<=Math.min(grid[0].length-2,center.x+hx);x++){
-   if(!floor(x,y)||(x===center.x&&y===center.y))continue;
-   for(const d of arrowDirections){
-    const cells=[];
-    for(let step=0;step<5;step++){
-     const nx=x+d.dx*step,ny=y+d.dy*step;
-     if(!floor(nx,ny)||Math.abs(nx-center.x)>hx||Math.abs(ny-center.y)>hy)break;
-     cells.push({x:nx,y:ny});
-    }
-    if(cells.length>=2)candidates.push({cells,glyph:d.glyph});
-   }
-  }
- }
- return candidates.length?candidates[Math.floor(rng()*candidates.length)]:null;
+// Fictional arcade sprite layer. All coordinates are in maze game units.
+// Independent animation never modifies the terrain or the StudyVerse SDK.
+const ARROW_PERIOD_MS=2000,ARROW_FLIGHT_MS=1750;
+function createArrowFlight(center,view,rng=Math.random){
+ const side=Math.floor(rng()*4),halfW=view.width/2,halfH=view.height/2;
+ // Random screen lane; no tracking or steering toward the player.
+ const lane=(rng()*0.88-0.44);
+ const horizontal=side<2;
+ const reverse=side===1||side===3;
+ const span=(horizontal?halfW:halfH)+1;
+ const offset=lane*(horizontal?view.height:view.width);
+ const start=horizontal?{x:center.x+(reverse?span:-span),y:center.y+offset}:{x:center.x+offset,y:center.y+(reverse?span:-span)};
+ const end=horizontal?{x:center.x+(reverse?-span:span),y:start.y}:{x:start.x,y:center.y+(reverse?-span:span)};
+ return {start,end,rotation:[0,180,90,270][side],age:0,x:start.x,y:start.y,previousX:start.x,previousY:start.y};
 }
 function createArrowHazard(){
- let tick=0,arrow=null,index=-1;
- function current(){
-  if(!arrow)return null;
-  const cell=arrow.cells[Math.max(index,0)];
-  return {...cell,glyph:arrow.glyph,warning:index<0};
- }
+ let elapsed=0,arrow=null;
  return {
-  reset(){tick=0;arrow=null;index=-1;},
-  current,
-  hit(p){const a=current();return !!a&&!a.warning&&a.x===p.x&&a.y===p.y;},
-  step(grid,center,cols,rows,rng=Math.random){
-   tick=(tick+1)%ARROW_PERIOD_TICKS;
-   if(tick===ARROW_PERIOD_TICKS-ARROW_WARNING_TICKS){arrow=chooseArrow(grid,center,cols,rows,rng);index=-1;}
-   else if(arrow&&(tick===0||index>=0)){
-    index++;
-    if(index>=arrow.cells.length){arrow=null;index=-1;}
+  reset(){elapsed=0;arrow=null;},
+  current(){return arrow;},
+  step(dt,center,view,rng=Math.random){
+   if(!(dt>0))return arrow;
+   if(arrow){
+    arrow.previousX=arrow.x;arrow.previousY=arrow.y;
+    arrow.age+=dt;
+    const fraction=Math.min(1,arrow.age/ARROW_FLIGHT_MS);
+    arrow.x=arrow.start.x+(arrow.end.x-arrow.start.x)*fraction;
+    arrow.y=arrow.start.y+(arrow.end.y-arrow.start.y)*fraction;
+    if(fraction===1)arrow=null;
    }
-   return current();
+   elapsed+=dt;
+   if(elapsed>=ARROW_PERIOD_MS){
+    elapsed%=ARROW_PERIOD_MS;
+    arrow=createArrowFlight(center,view,rng);
+   }
+   return arrow;
+  },
+  hit(p,swept=false){
+   if(!arrow)return false;
+   // Generous arcade overlap check, including positions between game frames.
+   const px=swept?arrow.previousX:arrow.x,py=swept?arrow.previousY:arrow.y;
+   const dx=arrow.x-px,dy=arrow.y-py;
+   const n=dx*dx+dy*dy;
+   const t=n?Math.max(0,Math.min(1,((p.x-px)*dx+(p.y-py)*dy)/n)):0;
+   return Math.abs(p.x-(px+dx*t))<0.42&&Math.abs(p.y-(py+dy*t))<0.42;
   }
  };
 }
 const arrows=createArrowHazard();
-let hazardTimer=null,hazardFrame=null,hazardLast=null,hazardFrameCount=0,scopedHazardsFinished=false;
+let hazardFrame=null,hazardLast=null,hazardFrameCount=0,scopedHazardsFinished=false;
 const nativeHazardTimer=typeof window.setInterval==='function'&&typeof window.clearInterval==='function';
-function tickHazards(){
- if(!canMove()||document.hidden)return;
- arrows.step(world.grid,position,cameraCols,cameraRows);
- if(arrows.hit(position)){resetPlayer('Arrow hit. Back to START — 0 moves.');return;}
- paintMaze();
+function arrowViewport(){
+ const cell=boardWidth/cameraCols;
+ if(!(cell>0)||lastWidth<=0||lastHeight<=0)return null;
+ const h=nativeFull?lastHeight:gameHeight;
+ return {cell,width:lastWidth/cell,height:h/cell,pixelWidth:lastWidth,pixelHeight:h};
 }
-function scopedHazardFrame(stamp){
+function renderProjectiles(){
+ const a=arrows.current(),v=arrowViewport();
+ if(!a||!v||!position){ui.projectile.hidden=true;return;}
+ const x=v.pixelWidth/2+(a.x-position.x)*v.cell;
+ const y=v.pixelHeight/2+(a.y-position.y)*v.cell;
+ if(Math.abs(x)>9000||Math.abs(y)>9000){ui.projectile.hidden=true;return;}
+ ui.projectile.hidden=false;
+ const size=Math.max(30,Math.min(58,v.cell*0.78));
+ const left=x.toFixed(2)+'px',top=y.toFixed(2)+'px',width=size.toFixed(2)+'px';
+ const transform='translate(-50%, -50%) rotate('+a.rotation+'deg)';
+ if(ui.projectile.style.left!==left)ui.projectile.style.left=left;
+ if(ui.projectile.style.top!==top)ui.projectile.style.top=top;
+ if(ui.projectile.style.width!==width)ui.projectile.style.width=width;
+ if(ui.projectile.style.transform!==transform)ui.projectile.style.transform=transform;
+}
+function projectileHit(swept=false){
+ // Retain the protected START and answer gates from the previous version.
+ return world.grid[position.y]?.[position.x]==='.'&&arrows.hit(position,swept);
+}
+function tickHazards(dt){
+ const v=arrowViewport();
+ if(!v||!canMove()||document.hidden)return;
+ arrows.step(dt,position,v);
+ if(projectileHit(true)){resetPlayer('Arrow hit — back to START. Moves reset to 0.');return;}
+ renderProjectiles();
+}
+function hazardAnimation(stamp){
  hazardFrame=null;
  if(!canMove()||document.hidden)return;
- if(hazardLast===null)hazardLast=stamp;
- if(stamp-hazardLast>=ARROW_TICK_MS){hazardLast=stamp;tickHazards();}
- scheduleScopedHazards();
+ if(hazardLast!==null)tickHazards(Math.max(0,Math.min(100,stamp-hazardLast)));
+ hazardLast=stamp;
+ scheduleHazards();
 }
-function scheduleScopedHazards(){
+function scheduleHazards(){
  if(hazardFrame!==null||!canMove()||document.hidden||scopedHazardsFinished)return;
- // The isolated online preview has a finite total animation-turn budget.
- // Do not consume its whole budget or interfere with movement / resize.
- if(hazardFrameCount>=1800){
-  scopedHazardsFinished=true;arrows.reset();paintMaze();
+ // Keep the isolated online preview inside its existing finite animation budget.
+ if(!nativeHazardTimer&&hazardFrameCount>=1800){
+  scopedHazardsFinished=true;arrows.reset();renderProjectiles();
   announce('Timed hazards paused for this limited preview. Keep exploring.');
   return;
  }
  if(typeof window.requestAnimationFrame==='function'){
-  hazardFrameCount++;hazardFrame=window.requestAnimationFrame(scopedHazardFrame);
+  if(!nativeHazardTimer)hazardFrameCount++;
+  hazardFrame=window.requestAnimationFrame(hazardAnimation);
  }
 }
-function startHazards(){
- if(!canMove()||document.hidden)return;
- if(nativeHazardTimer){
-  if(hazardTimer===null)hazardTimer=window.setInterval(tickHazards,ARROW_TICK_MS);
- }else scheduleScopedHazards();
-}
+function startHazards(){scheduleHazards();}
 function stopHazards(){
- if(hazardTimer!==null){window.clearInterval(hazardTimer);hazardTimer=null;}
  if(hazardFrame!==null){window.cancelAnimationFrame(hazardFrame);hazardFrame=null;}
  hazardLast=null;
 }
-
 function makeBoard(cols,rows){
  cameraCols=cols;cameraRows=rows;tiles.length=0;ui.board.replaceChildren();
  for(let y=0;y<rows;y++){
@@ -237,6 +259,7 @@ function fitBoard(){
  if(width!==boardWidth){boardWidth=width;ui.board.style.width=width+'px';}
  if(height!==boardHeight){boardHeight=height;ui.board.style.height=height+'px';}
  if(world&&changed){reveal();paintMaze();}
+ else if(world)renderProjectiles();
 }
 function scheduleFit(){
  if(!watching||resizeFrame!==null)return;
@@ -286,14 +309,12 @@ function tileView(x,y,includePlayer=true){
  return ['floor',''];
 }
 function paintMaze(){
- const hx=Math.floor(cameraCols/2),hy=Math.floor(cameraRows/2),arrow=arrows.current();
+ const hx=Math.floor(cameraCols/2),hy=Math.floor(cameraRows/2);
  for(const tile of tiles){
-  const x=position.x+tile.x-hx,y=position.y+tile.y-hy;
-  const [name,label]=tileView(x,y,false);
-  const here=arrow&&arrow.x===x&&arrow.y===y;
-  updateClass(tile.el,'tile '+name+(here?(arrow.warning?' arrow-warning':' arrow-flight'):''));
-  updateText(tile.mark,here?arrow.glyph:label);
+  const [name,label]=tileView(position.x+tile.x-hx,position.y+tile.y-hy,false);
+  updateClass(tile.el,'tile '+name);updateText(tile.mark,label);
  }
+ renderProjectiles();
 }
 function paintOptions(){
  const active=activeOptions();
@@ -343,14 +364,14 @@ function resetPlayer(message,clearMap=false){
  reveal();draw();announce(message);
 }
 function nextWorld(){
- world=buildWorld(Math.floor(Math.random()*4294967296));refreshTarget();resetPlayer('New maze ready. Choose a gate in Q&A.',true);
+ world=buildWorld(Math.floor(Math.random()*4294967296));refreshTarget();resetPlayer('Open Q&A to choose a gate. Dodge the flying arrows.',true);
 }
 function move(dx,dy){
  if(!canMove())return;
  const x=position.x+dx,y=position.y+dy;
  if(!available(x,y)){stopHold();announce('Wall ahead. Try another direction.');return;}
  position={x,y};moves++;reveal();
- if(arrows.hit(position)){resetPlayer('Arrow hit. Back to START — 0 moves.');return;}
+ if(projectileHit()){resetPlayer('Arrow hit — back to START. Moves reset to 0.');return;}
  startHazards();
  if(currentOption())stopHold();
  draw();announce(navigationMessage());

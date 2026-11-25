@@ -17,6 +17,13 @@
     <span class="hero-feet"></span>
    </div>
   </div>
+  <div class="projectile-layer" aria-hidden="true">
+   <div id="flying-arrow" class="flying-arrow" hidden>
+    <span class="arrow-shaft"></span>
+    <span class="arrow-head"></span>
+    <span class="arrow-feathers"></span>
+   </div>
+  </div>
  </section>
  <header class="hud">
   <div class="brand"><h1>MAZE QUEST</h1><small id="progress">Preparing maze</small></div>
@@ -50,7 +57,7 @@
    <button id="previous" class="glass" type="button">Previous gates</button>
    <button id="next" class="glass" type="button">Next gates</button>
   </div>
-  <p class="help">Choose an answer to track its gate. Follow the compass and step count, or explore freely. Light stone walls block movement; dark floor tiles are walkable. An amber arrow warns of a flying hazard every two seconds. Dodge the bright arrow; contact returns you to START with zero moves. Open Map to see discovered corridors. Reach your chosen gate and tap Enter gate to confirm. StudyVerse handles checking and the next item.</p>
+  <p class="help">Choose an answer to track its gate. Follow the compass and step count, or explore freely. Light stone walls block movement; dark floor tiles are walkable. A flying arrow enters from a random screen edge every two seconds, moving above the maze. Dodge it using the movement controls. Contact returns you to START with zero moves. START and answer gates are safe. Arrows pause in Q&A and Map. Open Map to see discovered corridors. Reach your chosen gate and tap Enter gate to confirm. StudyVerse handles checking and the next item.</p>
   <button id="resume" class="enter" type="button">Explore maze</button>
  </section>
  <section id="map-modal" class="modal" role="dialog" aria-modal="true" aria-label="Explored maze map" hidden>
